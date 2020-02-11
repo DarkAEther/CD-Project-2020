@@ -144,22 +144,24 @@ extern int yydebug;
     KW_USE = 289,
     KW_WHERE = 290,
     KW_WHILE = 291,
-    CHARACTER = 292,
-    STRING = 293,
-    RAW_STRING = 294,
-    BYTE = 295,
-    BYTE_STRING = 296,
-    RAW_BYTE_STRING = 297,
-    DECIMAL = 298,
-    HEX_INT = 299,
-    OCTAL_INT = 300,
-    BIN_INT = 301,
-    FLOAT = 302,
-    ARITH = 303,
-    BITWISE = 304,
-    ASSIGN_OPS = 305,
-    ASSIGN = 306,
-    RELATIONAL = 307
+    KW_LOOP = 292,
+    CHARACTER = 293,
+    STRING = 294,
+    RAW_STRING = 295,
+    BYTE = 296,
+    BYTE_STRING = 297,
+    RAW_BYTE_STRING = 298,
+    DECIMAL = 299,
+    HEX_INT = 300,
+    OCTAL_INT = 301,
+    BIN_INT = 302,
+    FLOAT = 303,
+    ARITH = 304,
+    BITWISE = 305,
+    ASSIGN_OPS = 306,
+    ASSIGN = 307,
+    RELATIONAL = 308,
+    IDENTIFIER = 309
   };
 #endif
 
@@ -415,7 +417,7 @@ union yyalloc
 #define YYLAST   0
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  53
+#define YYNTOKENS  55
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  2
 /* YYNRULES -- Number of rules.  */
@@ -424,7 +426,7 @@ union yyalloc
 #define YYNSTATES  3
 
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   307
+#define YYMAXUTOK   309
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
    as returned by yylex, with out-of-bounds checking.  */
@@ -465,14 +467,14 @@ static const yytype_uint8 yytranslate[] =
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
       35,    36,    37,    38,    39,    40,    41,    42,    43,    44,
-      45,    46,    47,    48,    49,    50,    51,    52
+      45,    46,    47,    48,    49,    50,    51,    52,    53,    54
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    57,    57
+       0,    58,    58
 };
 #endif
 
@@ -487,10 +489,10 @@ static const char *const yytname[] =
   "KW_MOD", "KW_MOVE", "KW_MUT", "KW_PUB", "KW_REF", "KW_RETURN",
   "KW_SELFVALUE", "KW_SELFTYPE", "KW_STATIC", "KW_STRUCT", "KW_SUPER",
   "KW_TRAIT", "KW_TRUE", "KW_TYPE", "KW_UNSAFE", "KW_USE", "KW_WHERE",
-  "KW_WHILE", "CHARACTER", "STRING", "RAW_STRING", "BYTE", "BYTE_STRING",
-  "RAW_BYTE_STRING", "DECIMAL", "HEX_INT", "OCTAL_INT", "BIN_INT", "FLOAT",
-  "ARITH", "BITWISE", "ASSIGN_OPS", "ASSIGN", "RELATIONAL", "$accept",
-  "stmt", YY_NULLPTR
+  "KW_WHILE", "KW_LOOP", "CHARACTER", "STRING", "RAW_STRING", "BYTE",
+  "BYTE_STRING", "RAW_BYTE_STRING", "DECIMAL", "HEX_INT", "OCTAL_INT",
+  "BIN_INT", "FLOAT", "ARITH", "BITWISE", "ASSIGN_OPS", "ASSIGN",
+  "RELATIONAL", "IDENTIFIER", "$accept", "stmt", YY_NULLPTR
 };
 #endif
 
@@ -504,7 +506,7 @@ static const yytype_uint16 yytoknum[] =
      275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
      285,   286,   287,   288,   289,   290,   291,   292,   293,   294,
      295,   296,   297,   298,   299,   300,   301,   302,   303,   304,
-     305,   306,   307
+     305,   306,   307,   308,   309
 };
 # endif
 
@@ -562,13 +564,13 @@ static const yytype_uint8 yycheck[] =
      symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,    54,     0
+       0,    56,     0
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    53,    54
+       0,    55,    56
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -1259,7 +1261,7 @@ yyreduce:
   switch (yyn)
     {
 
-#line 1263 "yacc.tab.c"
+#line 1265 "yacc.tab.c"
 
       default: break;
     }
@@ -1491,7 +1493,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 59 "yacc.y"
+#line 60 "yacc.y"
 
 
 void yyerror(char* text){

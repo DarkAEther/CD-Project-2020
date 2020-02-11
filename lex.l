@@ -53,74 +53,73 @@ KW_UNSIZED unsized
 KW_VIRTUAL virtual
 KW_YIELD yield
 KW_TRY try
+
 IDENTIFIER_OR_KEYWORD [a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+
-DOC_COMMENT \/\/\![^\n]*
+
+DOC_COMMENT \/\/\![^\n]*\n
 INNER_LINE_DOC \/\/!{1,2}
 INNER_BLOCK_DOC \/\*\!!{0,1}[^\n]*\*\/
-SINGLE_LINE_COMMENT \/{2,4}
-MULTI_LINE_COMMENT \/\*{1,3}.*\*\/
-WHITE_SPACE \u0009|\u000A|\u000B|\u000C|\u000D|\u0020|\u0085|\u200E|\u200F|\u2028|\u2029
+SINGLE_LINE_COMMENT \/{2,4}[^\n]*\n
+MULTI_LINE_COMMENT \/\*{1,3}(.|\n)*\*\/
+WHITE_SPACE [ ] | \t | \n
+
 CHARACTER \'.\'
 STRING \".*\"
 RAW_STRING r#\".*\"#
 BYTE b\'.*\'
 BYTE_STRING b\".*\"
 RAW_BYTE_STRING br#\".*\"#
+
 DECIMAL [1-9]((_[0-9]{1,3})*|[0-9]*)*
 HEX_INT 0x[0-9a-fA-F]*
 OCTAL_INT 0o[0-7]*
 BIN_INT 0b1*0*
 FLOAT [1-9][0-9]*\.[0-9]*
-ARITH_OPERATOR [+\-\*\/%]
-BITWISE_OPERATOR (\^|\!|&|\||&&|\|\||<<|>>)
-ASSIGN_OPS (\+=|\-=|\*=|\/=|%=|\^=|&=|\|=|<<=|>>=)
-ASSIGN \=
-RELATIONAL (==|\!=|>|<|>=|<=)
-%%
-{ASSIGN_OPS} {return ASSIGN_OPS};
-{ASSIGN} {return ASSIGN};
-{RELATIONAL} {return RELATIONAL};
-{WHITE_SPACE} {;}
-{ARITH_OPERATOR} {return ARITH};
-{BITWISE_OPERATOR} {return BITWISE};
 
-{KW_AS} {return KW_AS;}
-{KW_BREAK} {return KW_BREAK;}
-{KW_CONST} {return KW_CONST;}
-{KW_CONTINUE} {return KW_CONTINUE;}
-{KW_CRATE} {return KW_CRATE;}
-{KW_ELSE} {return KW_ELSE;}
-{KW_ENUM} {return KW_ENUM;}
-{KW_EXTERN} {return KW_EXTERN;}
-{KW_FALSE} {return KW_FALSE;}
-{KW_FN} {return KW_FN;}
-{KW_FOR} {return KW_FOR;}
-{KW_IF} {return KW_IF;}
-{KW_IMPL} {return KW_IMPL;}
-{KW_IN} {return KW_IN;}
-{KW_LET} {return KW_LET;}
-{KW_LOOP} {return KW_LOOP;}
-{KW_MATCH} {return KW_MATCH;}
-{KW_MOD} {return KW_MOD;}
-{KW_MOVE} {return KW_MOVE;}
-{KW_MUT} {return KW_MUT;}
-{KW_PUB} {return KW_PUB;}
-{KW_REF} {return KW_REF;}
-{KW_RETURN} {return KW_RETURN;}
-{KW_SELFVALUE} {return KW_SELFVALUE;}
-{KW_SELFTYPE} {return KW_SELFTYPE;}
-{KW_STATIC} {return KW_STATIC;}
-{KW_STRUCT} {return KW_STRUCT;}
-{KW_SUPER} {return KW_SUPER;}
-{KW_TRAIT} {return KW_TRAIT;}
-{KW_TRUE} {return KW_TRUE;}
-{KW_TYPE} {return KW_TYPE;}
-{KW_UNSAFE} {return KW_UNSAFE;}
-{KW_USE} {return KW_USE;}
-{KW_WHERE} {return KW_WHERE;}
-{KW_WHILE} {return KW_WHILE;}
-{IDENTIFIER_OR_KEYWORD} {return IDENTIFIER;}
+ARITH_OPERATOR (\+ | \- | \* | \\ | %)
+BITWISE_OPERATOR (\^ | \!| & | \| | && | \|\| | << | >> )
+ASSIGN_OPS (\+\=|\-\=|\*\=|\/\=|%\=|\^\=|&\=|\|\=|<<\=|>>\=)
+ASSIGN \=
+RELATIONAL (\=\=|\!\=|>|<|>\=|<\=)
+%%
+{KW_AS} {printf("KW_AS");return KW_AS;}
+{KW_BREAK} {printf("KW_BREAK");return KW_BREAK;}
+{KW_CONST} {printf("KW_CONST");return KW_CONST;}
+{KW_CONTINUE} {printf("KW_CONTINUE");return KW_CONTINUE;}
+{KW_CRATE} {printf("KW_CRATE");return KW_CRATE;}
+{KW_ELSE} {printf("KW_ELSE");return KW_ELSE;}
+{KW_ENUM} {printf("KW_ENUM");return KW_ENUM;}
+{KW_EXTERN} {printf("KW_EXTERN");return KW_EXTERN;}
+{KW_FALSE} {printf("KW_FALSE");return KW_FALSE;}
+{KW_FN} {printf("KW_FN");return KW_FN;}
+{KW_FOR} {printf("KW_FOR");return KW_FOR;}
+{KW_IF} {printf("KW_IF");return KW_IF;}
+{KW_IMPL} {printf("KW_IMPL");return KW_IMPL;}
+{KW_IN} {printf("KW_IN");return KW_IN;}
+{KW_LET} {printf("KW_LET");return KW_LET;}
+{KW_LOOP} {printf("KW_LOOP");return KW_LOOP;}
+{KW_MATCH} {printf("KW_MATCH");return KW_MATCH;}
+{KW_MOD} {printf("KW_MOD");return KW_MOD;}
+{KW_MOVE} {printf("KW_MOVE");return KW_MOVE;}
+{KW_MUT} {printf("KW_MUT");return KW_MUT;}
+{KW_PUB} {printf("KW_PUB");return KW_PUB;}
+{KW_REF} {printf("KW_REF");return KW_REF;}
+{KW_RETURN} {printf("KW_RETURN");return KW_RETURN;}
+{KW_SELFVALUE} {printf("KW_SELFVALUE");return KW_SELFVALUE;}
+{KW_SELFTYPE} {printf("KW_SELFTYPE");return KW_SELFTYPE;}
+{KW_STATIC} {printf("KW_STATIC");return KW_STATIC;}
+{KW_STRUCT} {printf("KW_STRUCT");return KW_STRUCT;}
+{KW_SUPER} {printf("KW_SUPER");return KW_SUPER;}
+{KW_TRAIT} {printf("KW_TRAIT");return KW_TRAIT;}
+{KW_TRUE} {printf("KW_TRUE");return KW_TRUE;}
+{KW_TYPE} {printf("KW_TYPE");return KW_TYPE;}
+{KW_UNSAFE} {printf("KW_UNSAFE");return KW_UNSAFE;}
+{KW_USE} {printf("KW_USE");return KW_USE;}
+{KW_WHERE} {printf("KW_WHERE");return KW_WHERE;}
+{KW_WHILE} {printf("KW_WHILE");return KW_WHILE;}
+
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{MULTI_LINE_COMMENT} {;}
+{IDENTIFIER_OR_KEYWORD} {printf("IDENTIFIER");return IDENTIFIER;}
 {CHARACTER} {return CHARACTER;}
 {STRING} {return STRING;}
 {RAW_STRING} {return RAW_STRING;}

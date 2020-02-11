@@ -36,6 +36,7 @@
 %token KW_USE
 %token KW_WHERE
 %token KW_WHILE
+%token KW_LOOP
 %token CHARACTER
 %token STRING
 %token RAW_STRING
@@ -52,7 +53,7 @@
 %token ASSIGN_OPS
 %token ASSIGN
 %token RELATIONAL
-
+%token IDENTIFIER
 %%
 stmt:
     ;
