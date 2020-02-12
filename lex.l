@@ -1,6 +1,8 @@
 %{
 #include <stdio.h>
 #include "yacc.tab.h"
+void comment();
+int comment_stack_count = 1;
 %}
 KW_AS as
 KW_BREAK break
@@ -56,12 +58,13 @@ KW_TRY try
 
 IDENTIFIER_OR_KEYWORD [a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+
 
-DOC_COMMENT \/\/\![^\n]*\n
+DOC_COMMENT \/\/\!.*\n
 INNER_LINE_DOC \/\/!{1,2}
-INNER_BLOCK_DOC \/\*\!!{0,1}[^\n]*\*\/
-SINGLE_LINE_COMMENT \/{2,4}[^\n]*\n
-MULTI_LINE_COMMENT \/\*{1,3}(.|\n)*\*\/
-WHITE_SPACE [ ] | \t | \n
+INNER_BLOCK_DOC \/\*\!!{0,1}.*\*\/
+SINGLE_LINE_COMMENT \/{2,4}.*\n
+EMPTY_MULTI \/\*{1,3}\/
+MULTI_LINE_COMMENT \/\*{1,3}
+WHITE_SPACE [ \t\n]
 
 CHARACTER \'.\'
 STRING \".*\"
@@ -82,6 +85,7 @@ ASSIGN_OPS (\+\=|\-\=|\*\=|\/\=|%\=|\^\=|&\=|\|\=|<<\=|>>\=)
 ASSIGN \=
 RELATIONAL (\=\=|\!\=|>|<|>\=|<\=)
 %%
+{WHITE_SPACE} {;}
 {KW_AS} {printf("KW_AS");return KW_AS;}
 {KW_BREAK} {printf("KW_BREAK");return KW_BREAK;}
 {KW_CONST} {printf("KW_CONST");return KW_CONST;}
@@ -118,7 +122,8 @@ RELATIONAL (\=\=|\!\=|>|<|>\=|<\=)
 {KW_WHERE} {printf("KW_WHERE");return KW_WHERE;}
 {KW_WHILE} {printf("KW_WHILE");return KW_WHILE;}
 
-{DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{MULTI_LINE_COMMENT} {;}
+{DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
+{MULTI_LINE_COMMENT} {comment();}
 {IDENTIFIER_OR_KEYWORD} {printf("IDENTIFIER");return IDENTIFIER;}
 {CHARACTER} {return CHARACTER;}
 {STRING} {return STRING;}
@@ -132,6 +137,36 @@ RELATIONAL (\=\=|\!\=|>|<|>\=|<\=)
 {BIN_INT} {return BIN_INT;}
 {FLOAT} {return FLOAT;}
 %%
-//TODO all escapes..do we even need these?
-//TODO retarded _ separator for numbers why the hell does this even exist?
-//TODO suffixes - really cool, but painful for CD
+
+void comment()
+{
+	char c, c1;
+loop:
+	while ((c = input()) != '*' && c != 0){
+		//printf("%c\n",c);
+		if (c == '/'){
+			if ((c1 = input()) == '*'){
+				//printf("wtf");
+				comment_stack_count++;
+			}else{
+				
+				if (c1 == 0){
+					break;	
+				}
+			}
+		}
+	}
+	if ((c1 = input()) != '/' && c != 0)
+	{
+		unput(c1);
+		goto loop;
+	}
+	
+	comment_stack_count--;
+	//printf("Count %d\n",comment_stack_count);
+	if (comment_stack_count > 0){
+		goto loop;
+	}else{
+		comment_stack_count = 1;
+	}
+}
