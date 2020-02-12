@@ -81,14 +81,19 @@ OCTAL_INT 0o[0-7]*
 BIN_INT 0b1*0*
 FLOAT [1-9][0-9]*\.[0-9]+
 
-ARITH_OPERATOR (\+ | \- | \* | \\ | %)
-BITWISE_OPERATOR (\^ | \!| & | \| | && | \|\| | << | >> )
+ARITH_OPERATOR [+\-\/\*]
+BITWISE_OPERATOR ([\^\!]|&&|\|\||<<|>>)
 ASSIGN_OPS (\+\=|\-\=|\*\=|\/\=|%\=|\^\=|&\=|\|\=|<<\=|>>\=)
 ASSIGN \=
 RELATIONAL (\=\=|\!\=|>|<|>\=|<\=)
 STMT_TERMINATOR ;
 %%
 {WHITE_SPACE} {;}
+{ASSIGN_OPS} {printf("ASSIGN_OPS");return ASSIGN_OPS;}
+{ASSIGN} {printf("ASSIGN");return ASSIGN;}
+{RELATIONAL} {printf("RELATIONAL");return RELATIONAL;}
+{ARITH_OPERATOR} {printf("ARITH");return ARITH;}
+{BITWISE_OPERATOR} {printf("BITWISE_OPERATOR");return BITWISE;}
 {KW_AS} {printf("KW_AS");return KW_AS;}
 {KW_BREAK} {printf("KW_BREAK");return KW_BREAK;}
 {KW_CONST} {printf("KW_CONST");return KW_CONST;}
