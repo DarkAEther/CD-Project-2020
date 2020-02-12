@@ -100,7 +100,9 @@ extern int yydebug;
     ASSIGN_OPS = 306,
     ASSIGN = 307,
     RELATIONAL = 308,
-    IDENTIFIER = 309
+    IDENTIFIER = 309,
+    STMT_TERMINATOR = 310,
+    RANGE = 311
   };
 #endif
 

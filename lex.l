@@ -1,3 +1,4 @@
+%option yylineno
 %{
 #include <stdio.h>
 #include "yacc.tab.h"
@@ -68,6 +69,7 @@ WHITE_SPACE [ \t\n]
 
 CHARACTER \'.\'
 STRING \".*\"
+RAW_STRING_LITERAL r\".*\"
 RAW_STRING r#\".*\"#
 BYTE b\'.*\'
 BYTE_STRING b\".*\"
@@ -77,13 +79,14 @@ DECIMAL [1-9]((_[0-9]{1,3})*|[0-9]*)*
 HEX_INT 0x[0-9a-fA-F]*
 OCTAL_INT 0o[0-7]*
 BIN_INT 0b1*0*
-FLOAT [1-9][0-9]*\.[0-9]*
+FLOAT [1-9][0-9]*\.[0-9]+
 
 ARITH_OPERATOR (\+ | \- | \* | \\ | %)
 BITWISE_OPERATOR (\^ | \!| & | \| | && | \|\| | << | >> )
 ASSIGN_OPS (\+\=|\-\=|\*\=|\/\=|%\=|\^\=|&\=|\|\=|<<\=|>>\=)
 ASSIGN \=
 RELATIONAL (\=\=|\!\=|>|<|>\=|<\=)
+STMT_TERMINATOR ;
 %%
 {WHITE_SPACE} {;}
 {KW_AS} {printf("KW_AS");return KW_AS;}
@@ -124,29 +127,31 @@ RELATIONAL (\=\=|\!\=|>|<|>\=|<\=)
 
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
 {MULTI_LINE_COMMENT} {comment();}
+{CHARACTER} {printf("CHARACTER");return CHARACTER;}
+{STRING} {printf("STRING");return STRING;}
+{RAW_STRING} {printf("RAW_STRING");return RAW_STRING;}
+{BYTE} {printf("BYTE");return BYTE;}
+{BYTE_STRING} {printf("BYTE_STRING");return BYTE_STRING;}
+{RAW_BYTE_STRING} {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
 {IDENTIFIER_OR_KEYWORD} {printf("IDENTIFIER");return IDENTIFIER;}
-{CHARACTER} {return CHARACTER;}
-{STRING} {return STRING;}
-{RAW_STRING} {return RAW_STRING;}
-{BYTE} {return BYTE;}
-{BYTE_STRING} {return BYTE_STRING;}
-{RAW_BYTE_STRING} {return RAW_BYTE_STRING;}
-{DECIMAL} {return DECIMAL;}
-{HEX_INT} {return HEX_INT;}
-{OCTAL_INT} {return OCTAL_INT;}
-{BIN_INT} {return BIN_INT;}
-{FLOAT} {return FLOAT;}
-%%
 
+{DECIMAL} {printf("DECIMAL");return DECIMAL;}
+".." {printf("RANGE");return RANGE;}
+{HEX_INT} {printf("HEX_INT");return HEX_INT;}
+{OCTAL_INT} {printf("OCTAL_INT");return OCTAL_INT;}
+{BIN_INT} {printf("BIN_INT");return BIN_INT;}
+{FLOAT} {printf("FLOAT");return FLOAT;}
+{STMT_TERMINATOR} {printf("STMT_TERMINATOR");return STMT_TERMINATOR;}
+%%
 void comment()
 {
 	char c, c1;
 loop:
 	while ((c = input()) != '*' && c != 0){
-		//printf("%c\n",c);
+		
 		if (c == '/'){
 			if ((c1 = input()) == '*'){
-				//printf("wtf");
+				
 				comment_stack_count++;
 			}else{
 				
@@ -163,7 +168,7 @@ loop:
 	}
 	
 	comment_stack_count--;
-	//printf("Count %d\n",comment_stack_count);
+	
 	if (comment_stack_count > 0){
 		goto loop;
 	}else{

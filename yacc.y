@@ -54,6 +54,8 @@
 %token ASSIGN
 %token RELATIONAL
 %token IDENTIFIER
+%token STMT_TERMINATOR
+%token RANGE
 %%
 stmt:
     ;
