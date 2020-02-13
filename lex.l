@@ -5,6 +5,20 @@
 void comment();
 void yyerror();
 int comment_stack_count = 1;
+int lit=0;
+struct literal {
+	char value[20];
+	char type[10];
+};
+struct var {
+	char name[32];
+	char lineNums[100];
+	char value[20];
+	char dtype[10];
+};
+struct literal literalTable[250];
+void dispLit();
+void installLiteral(char *value,char *type);
 %}
 KW_AS as
 KW_BREAK break
@@ -143,25 +157,26 @@ COMMA ,
 
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
 {MULTI_LINE_COMMENT} {comment();}
-{CHARACTER} {printf("CHARACTER");return CHARACTER;}
-{STRING} {printf("STRING");return STRING;}
+{CHARACTER} {printf("CHARACTER");installLiteral(yytext,"CHARACTER");return CHARACTER;}
+{STRING} {printf("STRING");installLiteral(yytext,"STRING");return STRING;}
 {RAW_STRING} {printf("RAW_STRING");return RAW_STRING;}
-{BYTE} {printf("BYTE");return BYTE;}
+{BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");;return BYTE;}
 {BYTE_STRING} {printf("BYTE_STRING");return BYTE_STRING;}
 {RAW_BYTE_STRING} {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
 {IDENTIFIER_OR_KEYWORD} {printf("IDENTIFIER");return IDENTIFIER;}
 
-{DECIMAL} {printf("DECIMAL");return DECIMAL;}
+{DECIMAL} {printf("DECIMAL");installLiteral(yytext,"DECIMAL");;return DECIMAL;}
 ".." {printf("RANGE");return RANGE;}
 {HEX_INT} {printf("HEX_INT");return HEX_INT;}
 {OCTAL_INT} {printf("OCTAL_INT");return OCTAL_INT;}
 {BIN_INT} {printf("BIN_INT");return BIN_INT;}
-{FLOAT} {printf("FLOAT");return FLOAT;}
+{FLOAT} {printf("FLOAT");installLiteral(yytext,"FLOAT");return FLOAT;}
 {STMT_TERMINATOR} {printf("STMT_TERMINATOR");return STMT_TERMINATOR;}
 [0-9]+[a-zA-Z]+ {yyerror();return ERROR;}
 {ARITH_OPERATOR}{2,} {yyerror();return ERROR;}
 {COMMA} {printf("COMMA");return COMMA;}
 . {yyerror();}
+#EOF {dispLit();}
 %%
 void comment()
 {
@@ -197,4 +212,15 @@ loop:
 }
 void yyerror(){
 	printf("ERROR: \"%s\" on line: %d\n",yytext,yylineno);
+}
+void installLiteral(char *value, char *type) {
+	strcpy(literalTable[lit].value, value);
+	strcpy(literalTable[lit].type, type);
+	lit++;
+}
+void dispLit(){
+	int i;
+	for (i = 0; i < lit; i++)
+		printf("Literal: %s \t Type: %s \n", literalTable[i].value, literalTable[i].type);
+
 }
