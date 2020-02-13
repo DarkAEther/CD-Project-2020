@@ -652,15 +652,33 @@ void comment();
 void yyerror();
 int comment_stack_count = 1;
 int lit=0;
+int scope=0;
+int max_depth=0;
 struct literal {
 	char value[20];
 	char type[10];
 };
-struct literal literalTable[250];
+struct id {
+	char name[32];
+	int lineno;
+	char value[20];
+	char dtype[10];
+}; // Identifier token format 
+struct scopes{
+	struct id identifiers[100];
+	int count;
+}; // Scope-specific symbol table
+struct symtbl{
+	struct scopes table[5];
+	struct literal literalTable[500];
+};
+struct symtbl symbolTable;
 void dispLit();
 void installLiteral(char *value,char *type);
-#line 663 "lex.yy.c"
-#line 664 "lex.yy.c"
+void installID(char *name,int lno);
+void dispST();
+#line 681 "lex.yy.c"
+#line 682 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -877,9 +895,9 @@ YY_DECL
 		}
 
 	{
-#line 104 "lex.l"
+#line 122 "lex.l"
 
-#line 883 "lex.yy.c"
+#line 901 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -948,347 +966,347 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 105 "lex.l"
+#line 123 "lex.l"
 {printf(" ");}
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 106 "lex.l"
+#line 124 "lex.l"
 {printf("\n");}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 107 "lex.l"
-{printf("OPEN_BLOCK");return OPEN_BLOCK;}
+#line 125 "lex.l"
+{printf("OPEN_BLOCK");scope++;if(scope>max_depth){ max_depth=scope;};return OPEN_BLOCK;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 108 "lex.l"
-{printf("CLOSE_BLOCK");return CLOSE_BLOCK;}
+#line 126 "lex.l"
+{printf("CLOSE_BLOCK");scope--;return CLOSE_BLOCK;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 109 "lex.l"
+#line 127 "lex.l"
 {printf("OPEN_PARANTHESIS");return OPEN_PARANTHESIS;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 110 "lex.l"
+#line 128 "lex.l"
 {printf("CLOSE_PARANTHESIS");return CLOSE_PARANTHESIS;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 111 "lex.l"
+#line 129 "lex.l"
 {printf("ASSIGN_OPS");return ASSIGN_OPS;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 112 "lex.l"
+#line 130 "lex.l"
 {printf("ASSIGN");return ASSIGN;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 113 "lex.l"
+#line 131 "lex.l"
 {printf("RELATIONAL");return RELATIONAL;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 114 "lex.l"
+#line 132 "lex.l"
 {printf("ARITH");return ARITH;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 115 "lex.l"
+#line 133 "lex.l"
 {printf("BITWISE_OPERATOR");return BITWISE;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 116 "lex.l"
+#line 134 "lex.l"
 {printf("KW_AS");return KW_AS;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 117 "lex.l"
+#line 135 "lex.l"
 {printf("KW_BREAK");return KW_BREAK;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 118 "lex.l"
+#line 136 "lex.l"
 {printf("KW_CONST");return KW_CONST;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 119 "lex.l"
+#line 137 "lex.l"
 {printf("KW_CONTINUE");return KW_CONTINUE;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 120 "lex.l"
+#line 138 "lex.l"
 {printf("KW_CRATE");return KW_CRATE;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 121 "lex.l"
+#line 139 "lex.l"
 {printf("KW_ELSE");return KW_ELSE;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 122 "lex.l"
+#line 140 "lex.l"
 {printf("KW_ENUM");return KW_ENUM;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 123 "lex.l"
+#line 141 "lex.l"
 {printf("KW_EXTERN");return KW_EXTERN;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 124 "lex.l"
+#line 142 "lex.l"
 {printf("KW_FALSE");return KW_FALSE;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 125 "lex.l"
+#line 143 "lex.l"
 {printf("KW_FN");return KW_FN;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 126 "lex.l"
+#line 144 "lex.l"
 {printf("KW_FOR");return KW_FOR;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 127 "lex.l"
+#line 145 "lex.l"
 {printf("KW_IF");return KW_IF;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 128 "lex.l"
+#line 146 "lex.l"
 {printf("KW_IMPL");return KW_IMPL;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 129 "lex.l"
+#line 147 "lex.l"
 {printf("KW_IN");return KW_IN;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 130 "lex.l"
+#line 148 "lex.l"
 {printf("KW_LET");return KW_LET;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 131 "lex.l"
+#line 149 "lex.l"
 {printf("KW_LOOP");return KW_LOOP;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 132 "lex.l"
+#line 150 "lex.l"
 {printf("KW_MATCH");return KW_MATCH;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 133 "lex.l"
+#line 151 "lex.l"
 {printf("KW_MOD");return KW_MOD;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 134 "lex.l"
+#line 152 "lex.l"
 {printf("KW_MOVE");return KW_MOVE;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 135 "lex.l"
+#line 153 "lex.l"
 {printf("KW_MUT");return KW_MUT;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 136 "lex.l"
+#line 154 "lex.l"
 {printf("KW_PUB");return KW_PUB;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 137 "lex.l"
+#line 155 "lex.l"
 {printf("KW_REF");return KW_REF;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 138 "lex.l"
+#line 156 "lex.l"
 {printf("KW_RETURN");return KW_RETURN;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 139 "lex.l"
+#line 157 "lex.l"
 {printf("KW_SELFVALUE");return KW_SELFVALUE;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 140 "lex.l"
+#line 158 "lex.l"
 {printf("KW_SELFTYPE");return KW_SELFTYPE;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 141 "lex.l"
+#line 159 "lex.l"
 {printf("KW_STATIC");return KW_STATIC;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 142 "lex.l"
+#line 160 "lex.l"
 {printf("KW_STRUCT");return KW_STRUCT;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 143 "lex.l"
+#line 161 "lex.l"
 {printf("KW_SUPER");return KW_SUPER;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 144 "lex.l"
+#line 162 "lex.l"
 {printf("KW_TRAIT");return KW_TRAIT;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 145 "lex.l"
+#line 163 "lex.l"
 {printf("KW_TRUE");return KW_TRUE;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 146 "lex.l"
+#line 164 "lex.l"
 {printf("KW_TYPE");return KW_TYPE;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 147 "lex.l"
+#line 165 "lex.l"
 {printf("KW_UNSAFE");return KW_UNSAFE;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 148 "lex.l"
+#line 166 "lex.l"
 {printf("KW_USE");return KW_USE;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 149 "lex.l"
+#line 167 "lex.l"
 {printf("KW_WHERE");return KW_WHERE;}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 150 "lex.l"
+#line 168 "lex.l"
 {printf("KW_WHILE");return KW_WHILE;}
 	YY_BREAK
 case 47:
 /* rule 47 can match eol */
 YY_RULE_SETUP
-#line 152 "lex.l"
+#line 170 "lex.l"
 {;}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 153 "lex.l"
+#line 171 "lex.l"
 {comment();}
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 154 "lex.l"
+#line 172 "lex.l"
 {printf("CHARACTER");installLiteral(yytext,"CHARACTER");return CHARACTER;}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 155 "lex.l"
+#line 173 "lex.l"
 {printf("STRING");installLiteral(yytext,"STRING");return STRING;}
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 156 "lex.l"
+#line 174 "lex.l"
 {printf("RAW_STRING");return RAW_STRING;}
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 157 "lex.l"
+#line 175 "lex.l"
 {printf("BYTE");installLiteral(yytext,"BYTE");;return BYTE;}
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 158 "lex.l"
+#line 176 "lex.l"
 {printf("BYTE_STRING");return BYTE_STRING;}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 159 "lex.l"
+#line 177 "lex.l"
 {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 160 "lex.l"
-{printf("IDENTIFIER");return IDENTIFIER;}
+#line 178 "lex.l"
+{printf("IDENTIFIER");installID(yytext,yylineno);return IDENTIFIER;}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 162 "lex.l"
+#line 180 "lex.l"
 {printf("DECIMAL");installLiteral(yytext,"DECIMAL");;return DECIMAL;}
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 163 "lex.l"
+#line 181 "lex.l"
 {printf("RANGE");return RANGE;}
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 164 "lex.l"
+#line 182 "lex.l"
 {printf("HEX_INT");return HEX_INT;}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 165 "lex.l"
+#line 183 "lex.l"
 {printf("OCTAL_INT");return OCTAL_INT;}
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 166 "lex.l"
+#line 184 "lex.l"
 {printf("BIN_INT");return BIN_INT;}
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 167 "lex.l"
+#line 185 "lex.l"
 {printf("FLOAT");installLiteral(yytext,"FLOAT");return FLOAT;}
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 168 "lex.l"
+#line 186 "lex.l"
 {printf("STMT_TERMINATOR");return STMT_TERMINATOR;}
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 169 "lex.l"
+#line 187 "lex.l"
 {yyerror();return ERROR;}
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 170 "lex.l"
+#line 188 "lex.l"
 {yyerror();return ERROR;}
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 171 "lex.l"
+#line 189 "lex.l"
 {printf("COMMA");return COMMA;}
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 172 "lex.l"
+#line 190 "lex.l"
 {yyerror();}
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 173 "lex.l"
-{dispLit();}
+#line 191 "lex.l"
+{dispLit();dispST();}
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 174 "lex.l"
+#line 192 "lex.l"
 ECHO;
 	YY_BREAK
-#line 1292 "lex.yy.c"
+#line 1310 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2305,7 +2323,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 174 "lex.l"
+#line 192 "lex.l"
 
 void comment()
 {
@@ -2343,13 +2361,47 @@ void yyerror(){
 	printf("ERROR: \"%s\" on line: %d\n",yytext,yylineno);
 }
 void installLiteral(char *value, char *type) {
-	strcpy(literalTable[lit].value, value);
-	strcpy(literalTable[lit].type, type);
+	strcpy(symbolTable.literalTable[lit].value, value);
+	strcpy(symbolTable.literalTable[lit].type, type);
 	lit++;
 }
 void dispLit(){
 	int i;
 	for (i = 0; i < lit; i++)
-		printf("Literal: %s \t Type: %s \n", literalTable[i].value, literalTable[i].type);
+		printf("Literal: %s \t Type: %s \n", symbolTable.literalTable[i].value, symbolTable.literalTable[i].type);
 
+}
+void installID(char *name,int lno){
+	int i;
+	int present=1;
+	for (i = 0; i < symbolTable.table[scope].count; i++){
+		if(strcmp(symbolTable.table[scope].identifiers[i].name, name)==0){
+			present=0;
+			break;
+		}
+		
+	}
+	
+	if(i==symbolTable.table[scope].count){
+		int x=symbolTable.table[scope].count;
+		strcpy(symbolTable.table[scope].identifiers[x].name, name);
+		symbolTable.table[scope].identifiers[i].lineno=lno;
+		symbolTable.table[scope].count++;
+
+	}
+	
+}
+void dispST(){
+	int i=0;
+	while(i<max_depth){
+		int j=0;
+		printf("Symbol Table at depth %d\n",i);
+		while(j<symbolTable.table[i].count){
+			printf("<Identifier,%s,value,datatype,%d> ",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].lineno);
+			j++;
+		}
+		printf("\n");
+		i++;
+
+	}
 }

@@ -6,19 +6,31 @@ void comment();
 void yyerror();
 int comment_stack_count = 1;
 int lit=0;
+int scope=0;
+int max_depth=0;
 struct literal {
 	char value[20];
 	char type[10];
 };
-struct var {
+struct id {
 	char name[32];
-	char lineNums[100];
+	int lineno;
 	char value[20];
 	char dtype[10];
+}; // Identifier token format 
+struct scopes{
+	struct id identifiers[100];
+	int count;
+}; // Scope-specific symbol table
+struct symtbl{
+	struct scopes table[5];
+	struct literal literalTable[500];
 };
-struct literal literalTable[250];
+struct symtbl symbolTable;
 void dispLit();
 void installLiteral(char *value,char *type);
+void installID(char *name,int lno);
+void dispST();
 %}
 KW_AS as
 KW_BREAK break
@@ -110,8 +122,8 @@ COMMA ,
 %%
 {WHITE_SPACE} {printf(" ");}
 \n {printf("\n");}
-{OPEN_BLOCK} {printf("OPEN_BLOCK");return OPEN_BLOCK;}
-{CLOSE_BLOCK} {printf("CLOSE_BLOCK");return CLOSE_BLOCK;}
+{OPEN_BLOCK} {printf("OPEN_BLOCK");scope++;if(scope>max_depth){ max_depth=scope;};return OPEN_BLOCK;}
+{CLOSE_BLOCK} {printf("CLOSE_BLOCK");scope--;return CLOSE_BLOCK;}
 {OPEN_PARANTHESIS} {printf("OPEN_PARANTHESIS");return OPEN_PARANTHESIS;}
 {CLOSE_PARANTHESIS} {printf("CLOSE_PARANTHESIS");return CLOSE_PARANTHESIS;}
 {ASSIGN_OPS} {printf("ASSIGN_OPS");return ASSIGN_OPS;}
@@ -163,7 +175,7 @@ COMMA ,
 {BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");;return BYTE;}
 {BYTE_STRING} {printf("BYTE_STRING");return BYTE_STRING;}
 {RAW_BYTE_STRING} {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
-{IDENTIFIER_OR_KEYWORD} {printf("IDENTIFIER");return IDENTIFIER;}
+{IDENTIFIER_OR_KEYWORD} {printf("IDENTIFIER");installID(yytext,yylineno);return IDENTIFIER;}
 
 {DECIMAL} {printf("DECIMAL");installLiteral(yytext,"DECIMAL");;return DECIMAL;}
 ".." {printf("RANGE");return RANGE;}
@@ -176,7 +188,7 @@ COMMA ,
 {ARITH_OPERATOR}{2,} {yyerror();return ERROR;}
 {COMMA} {printf("COMMA");return COMMA;}
 . {yyerror();}
-#EOF {dispLit();}
+#EOF {dispLit();dispST();}
 %%
 void comment()
 {
@@ -214,13 +226,47 @@ void yyerror(){
 	printf("ERROR: \"%s\" on line: %d\n",yytext,yylineno);
 }
 void installLiteral(char *value, char *type) {
-	strcpy(literalTable[lit].value, value);
-	strcpy(literalTable[lit].type, type);
+	strcpy(symbolTable.literalTable[lit].value, value);
+	strcpy(symbolTable.literalTable[lit].type, type);
 	lit++;
 }
 void dispLit(){
 	int i;
 	for (i = 0; i < lit; i++)
-		printf("Literal: %s \t Type: %s \n", literalTable[i].value, literalTable[i].type);
+		printf("Literal: %s \t Type: %s \n", symbolTable.literalTable[i].value, symbolTable.literalTable[i].type);
 
+}
+void installID(char *name,int lno){
+	int i;
+	int present=1;
+	for (i = 0; i < symbolTable.table[scope].count; i++){
+		if(strcmp(symbolTable.table[scope].identifiers[i].name, name)==0){
+			present=0;
+			break;
+		}
+		
+	}
+	
+	if(i==symbolTable.table[scope].count){
+		int x=symbolTable.table[scope].count;
+		strcpy(symbolTable.table[scope].identifiers[x].name, name);
+		symbolTable.table[scope].identifiers[i].lineno=lno;
+		symbolTable.table[scope].count++;
+
+	}
+	
+}
+void dispST(){
+	int i=0;
+	while(i<max_depth){
+		int j=0;
+		printf("Symbol Table at depth %d\n",i);
+		while(j<symbolTable.table[i].count){
+			printf("<Identifier,%s,value,datatype,%d> ",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].lineno);
+			j++;
+		}
+		printf("\n");
+		i++;
+
+	}
 }

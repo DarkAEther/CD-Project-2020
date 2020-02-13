@@ -6,4 +6,7 @@ fn main(){
            }
            println!("x is {}",x);
         }
+        {y=5;}
+        {y=5;}
 }
+#EOF

@@ -51,7 +51,7 @@ identifier (_|{letter})({letter}|{digit}|_){0,31}
 {ws} 																										;
 "//"(.*)[\n]? 																					;
 "/*"([^*]|(\*+[^*/]))*"*/"[\n]? 												;
-fn 																											printf("fn\n");
+fn 																											{printf("fn\n");printf("%d\n",yylineno);}
 main 																										printf("main\n");
 let 																										printf("let\n");
 in 																											printf("in\n");
