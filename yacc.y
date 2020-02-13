@@ -56,6 +56,12 @@
 %token IDENTIFIER
 %token STMT_TERMINATOR
 %token RANGE
+%token ERROR
+%token OPEN_BLOCK
+%token CLOSE_BLOCK
+%token OPEN_PARANTHESIS
+%token CLOSE_PARANTHESIS
+%token COMMA
 %%
 stmt:
     ;

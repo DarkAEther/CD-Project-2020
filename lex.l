@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "yacc.tab.h"
 void comment();
+void yyerror();
 int comment_stack_count = 1;
 %}
 KW_AS as
@@ -65,7 +66,7 @@ INNER_BLOCK_DOC \/\*\!!{0,1}.*\*\/
 SINGLE_LINE_COMMENT \/{2,4}.*\n
 EMPTY_MULTI \/\*{1,3}\/
 MULTI_LINE_COMMENT \/\*{1,3}
-WHITE_SPACE [ \t\n]
+WHITE_SPACE [ \t]
 
 CHARACTER \'.\'
 STRING \".*\"
@@ -87,8 +88,18 @@ ASSIGN_OPS (\+\=|\-\=|\*\=|\/\=|%\=|\^\=|&\=|\|\=|<<\=|>>\=)
 ASSIGN \=
 RELATIONAL (\=\=|\!\=|>|<|>\=|<\=)
 STMT_TERMINATOR ;
+OPEN_BLOCK \{
+CLOSE_BLOCK \}
+OPEN_PARANTHESIS \(
+CLOSE_PARANTHESIS \)
+COMMA ,
 %%
-{WHITE_SPACE} {;}
+{WHITE_SPACE} {printf(" ");}
+\n {printf("\n");}
+{OPEN_BLOCK} {printf("OPEN_BLOCK");return OPEN_BLOCK;}
+{CLOSE_BLOCK} {printf("CLOSE_BLOCK");return CLOSE_BLOCK;}
+{OPEN_PARANTHESIS} {printf("OPEN_PARANTHESIS");return OPEN_PARANTHESIS;}
+{CLOSE_PARANTHESIS} {printf("CLOSE_PARANTHESIS");return CLOSE_PARANTHESIS;}
 {ASSIGN_OPS} {printf("ASSIGN_OPS");return ASSIGN_OPS;}
 {ASSIGN} {printf("ASSIGN");return ASSIGN;}
 {RELATIONAL} {printf("RELATIONAL");return RELATIONAL;}
@@ -147,6 +158,10 @@ STMT_TERMINATOR ;
 {BIN_INT} {printf("BIN_INT");return BIN_INT;}
 {FLOAT} {printf("FLOAT");return FLOAT;}
 {STMT_TERMINATOR} {printf("STMT_TERMINATOR");return STMT_TERMINATOR;}
+[0-9]+[a-zA-Z]+ {yyerror();return ERROR;}
+{ARITH_OPERATOR}{2,} {yyerror();return ERROR;}
+{COMMA} {printf("COMMA");return COMMA;}
+. {yyerror();}
 %%
 void comment()
 {
@@ -179,4 +194,7 @@ loop:
 	}else{
 		comment_stack_count = 1;
 	}
+}
+void yyerror(){
+	printf("ERROR: \"%s\" on line: %d\n",yytext,yylineno);
 }

@@ -1,8 +1,8 @@
 
-#![allow(unused_variables)]
 fn main() {
 //! A doc comment that applies to the implicit anonymous module of this crate
-
+    int 13a;
+    int a = 34++++334;
 pub mod outer_module {
 
     //!  - Inner line doc

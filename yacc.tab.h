@@ -102,7 +102,13 @@ extern int yydebug;
     RELATIONAL = 308,
     IDENTIFIER = 309,
     STMT_TERMINATOR = 310,
-    RANGE = 311
+    RANGE = 311,
+    ERROR = 312,
+    OPEN_BLOCK = 313,
+    CLOSE_BLOCK = 314,
+    OPEN_PARANTHESIS = 315,
+    CLOSE_PARANTHESIS = 316,
+    COMMA = 317
   };
 #endif
 
