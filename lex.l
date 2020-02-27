@@ -2,9 +2,11 @@
 %{
 #include <stdio.h>
 #include "yacc.tab.h"
+#include "y.tab.h"
 void comment();
 void yyerror();
 int comment_stack_count = 1;
+extern int line_num;
 int lit=0;
 int scope=0;
 int max_depth=0;
@@ -83,7 +85,7 @@ KW_UNSIZED unsized
 KW_VIRTUAL virtual
 KW_YIELD yield
 KW_TRY try
-
+KW_PRINTLN println!
 IDENTIFIER_OR_KEYWORD [a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+
 
 DOC_COMMENT \/\/\!.*\n
@@ -119,74 +121,55 @@ CLOSE_BLOCK \}
 OPEN_PARANTHESIS \(
 CLOSE_PARANTHESIS \)
 COMMA ,
+MAIN main
 %%
 {WHITE_SPACE} {printf(" ");}
-\n {printf("\n");}
-{OPEN_BLOCK} {printf("OPEN_BLOCK");scope++;if(scope>max_depth){ max_depth=scope;};return OPEN_BLOCK;}
-{CLOSE_BLOCK} {printf("CLOSE_BLOCK");scope--;return CLOSE_BLOCK;}
-{OPEN_PARANTHESIS} {printf("OPEN_PARANTHESIS");return OPEN_PARANTHESIS;}
-{CLOSE_PARANTHESIS} {printf("CLOSE_PARANTHESIS");return CLOSE_PARANTHESIS;}
-{ASSIGN_OPS} {printf("ASSIGN_OPS");return ASSIGN_OPS;}
-{ASSIGN} {printf("ASSIGN");return ASSIGN;}
-{RELATIONAL} {printf("RELATIONAL");return RELATIONAL;}
-{ARITH_OPERATOR} {printf("ARITH");return ARITH;}
-{BITWISE_OPERATOR} {printf("BITWISE_OPERATOR");return BITWISE;}
-{KW_AS} {printf("KW_AS");return KW_AS;}
-{KW_BREAK} {printf("KW_BREAK");return KW_BREAK;}
-{KW_CONST} {printf("KW_CONST");return KW_CONST;}
-{KW_CONTINUE} {printf("KW_CONTINUE");return KW_CONTINUE;}
-{KW_CRATE} {printf("KW_CRATE");return KW_CRATE;}
-{KW_ELSE} {printf("KW_ELSE");return KW_ELSE;}
-{KW_ENUM} {printf("KW_ENUM");return KW_ENUM;}
-{KW_EXTERN} {printf("KW_EXTERN");return KW_EXTERN;}
-{KW_FALSE} {printf("KW_FALSE");return KW_FALSE;}
-{KW_FN} {printf("KW_FN");return KW_FN;}
-{KW_FOR} {printf("KW_FOR");return KW_FOR;}
-{KW_IF} {printf("KW_IF");return KW_IF;}
-{KW_IMPL} {printf("KW_IMPL");return KW_IMPL;}
-{KW_IN} {printf("KW_IN");return KW_IN;}
-{KW_LET} {printf("KW_LET");return KW_LET;}
-{KW_LOOP} {printf("KW_LOOP");return KW_LOOP;}
-{KW_MATCH} {printf("KW_MATCH");return KW_MATCH;}
-{KW_MOD} {printf("KW_MOD");return KW_MOD;}
-{KW_MOVE} {printf("KW_MOVE");return KW_MOVE;}
-{KW_MUT} {printf("KW_MUT");return KW_MUT;}
-{KW_PUB} {printf("KW_PUB");return KW_PUB;}
-{KW_REF} {printf("KW_REF");return KW_REF;}
-{KW_RETURN} {printf("KW_RETURN");return KW_RETURN;}
-{KW_SELFVALUE} {printf("KW_SELFVALUE");return KW_SELFVALUE;}
-{KW_SELFTYPE} {printf("KW_SELFTYPE");return KW_SELFTYPE;}
-{KW_STATIC} {printf("KW_STATIC");return KW_STATIC;}
-{KW_STRUCT} {printf("KW_STRUCT");return KW_STRUCT;}
-{KW_SUPER} {printf("KW_SUPER");return KW_SUPER;}
-{KW_TRAIT} {printf("KW_TRAIT");return KW_TRAIT;}
-{KW_TRUE} {printf("KW_TRUE");return KW_TRUE;}
-{KW_TYPE} {printf("KW_TYPE");return KW_TYPE;}
-{KW_UNSAFE} {printf("KW_UNSAFE");return KW_UNSAFE;}
-{KW_USE} {printf("KW_USE");return KW_USE;}
-{KW_WHERE} {printf("KW_WHERE");return KW_WHERE;}
-{KW_WHILE} {printf("KW_WHILE");return KW_WHILE;}
+\n {line_num+=1;}
+{OPEN_BLOCK} {scope++;if(scope>max_depth){ max_depth=scope;};return OPEN_BLOCK;}
+{CLOSE_BLOCK} {scope--;return CLOSE_BLOCK;}
+{OPEN_PARANTHESIS} {return OPEN_PARANTHESIS;}
+{CLOSE_PARANTHESIS} {return CLOSE_PARANTHESIS;}
+{ASSIGN_OPS} {return ASSIGN_OPS;}
+{ASSIGN} {return ASSIGN;}
+{RELATIONAL} {return RELATIONAL;}
+{ARITH_OPERATOR} {return ARITH;}
+{BITWISE_OPERATOR} {return BITWISE;}
+{KW_AS} {return KW_AS;}
+{KW_BREAK} {return KW_BREAK;}
+{KW_CONST} {return KW_CONST;}
+{KW_CONTINUE} {return KW_CONTINUE;}
+{KW_CRATE} {return KW_CRATE;}
+{KW_ELSE} {return KW_ELSE;}
 
+{KW_FN} {return KW_FN;}
+{KW_FOR} {return KW_FOR;}
+{KW_IF} {return KW_IF;}
+{KW_IN} {return KW_IN;}
+{KW_LET} {return KW_LET;}
+{KW_LOOP} {return KW_LOOP;}
+{KW_WHILE} {return KW_WHILE;}
+{KW_PRINTLN} {return KW_PRINTLN;}
+{MAIN} {return KW_MAIN;}
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
 {MULTI_LINE_COMMENT} {comment();}
-{CHARACTER} {printf("CHARACTER");installLiteral(yytext,"CHARACTER");return CHARACTER;}
-{STRING} {printf("STRING");installLiteral(yytext,"STRING");return STRING;}
-{RAW_STRING} {printf("RAW_STRING");return RAW_STRING;}
+{CHARACTER} {installLiteral(yytext,"CHARACTER");return CHARACTER;}
+{STRING} {installLiteral(yytext,"STRING");return STRING;}
+{RAW_STRING} {return RAW_STRING;}
 {BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");;return BYTE;}
 {BYTE_STRING} {printf("BYTE_STRING");return BYTE_STRING;}
 {RAW_BYTE_STRING} {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
-{IDENTIFIER_OR_KEYWORD} {printf("IDENTIFIER");installID(yytext,yylineno);return IDENTIFIER;}
+{IDENTIFIER_OR_KEYWORD} {installID(yytext,yylineno);return IDENTIFIER;}
 
-{DECIMAL} {printf("DECIMAL");installLiteral(yytext,"DECIMAL");;return DECIMAL;}
-".." {printf("RANGE");return RANGE;}
+{DECIMAL} {installLiteral(yytext,"DECIMAL");;return DECIMAL;}
+".." {return RANGE;}
 {HEX_INT} {printf("HEX_INT");return HEX_INT;}
 {OCTAL_INT} {printf("OCTAL_INT");return OCTAL_INT;}
 {BIN_INT} {printf("BIN_INT");return BIN_INT;}
-{FLOAT} {printf("FLOAT");installLiteral(yytext,"FLOAT");return FLOAT;}
-{STMT_TERMINATOR} {printf("STMT_TERMINATOR");return STMT_TERMINATOR;}
+{FLOAT} {installLiteral(yytext,"FLOAT");return FLOAT;}
+{STMT_TERMINATOR} {return STMT_TERMINATOR;}
 [0-9]+[a-zA-Z]+ {yyerror();return ERROR;}
 {ARITH_OPERATOR}{2,} {yyerror();return ERROR;}
-{COMMA} {printf("COMMA");return COMMA;}
+{COMMA} {return COMMA;}
 . {yyerror();}
 #EOF {dispLit();dispST();}
 %%
@@ -222,9 +205,7 @@ loop:
 		comment_stack_count = 1;
 	}
 }
-void yyerror(){
-	printf("ERROR: \"%s\" on line: %d\n",yytext,yylineno);
-}
+
 void installLiteral(char *value, char *type) {
 	strcpy(symbolTable.literalTable[lit].value, value);
 	strcpy(symbolTable.literalTable[lit].type, type);
