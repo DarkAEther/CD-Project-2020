@@ -10,7 +10,7 @@ int comment_stack_count = 1;
 int lit=0;
 int scope=0;
 int max_depth=0;
-
+extern void yyerror(char *);
 void dispLit();
 void installLiteral(char *value,char *type);
 void installID(char *name,int lno);

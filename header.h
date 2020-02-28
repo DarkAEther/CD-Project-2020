@@ -19,7 +19,4 @@ struct symtbl{
 
 extern struct symtbl symbolTable;
 extern int yylineno;
-void yyerror(char *s){
-	printf("ERROR: \"%s\" on line: %d\n",s, yylineno);
-	yyparse();
-}
+

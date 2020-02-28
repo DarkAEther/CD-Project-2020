@@ -75,7 +75,10 @@ extern int scope;
 %token EOFI
 %%
 start: Main EOFI {printf("\n-------------ACCEPTED----------------\n");}
-  |
+  | Blk
+  | EOFI
+  | error ';'
+  | error '\n'
   ;
 Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOCK
   ;
@@ -124,6 +127,11 @@ For: KW_FOR IDENTIFIER KW_IN DECIMAL RANGE DECIMAL OPEN_BLOCK Blk CLOSE_BLOCK
   ;
 %%
 
-void main(){
+int main(){
         yyparse();
+        return 0;
+}
+void yyerror(char *s){
+	printf("ERROR: \"%s\" on line: %d\n",s, yylineno);
+	yyparse();
 }
