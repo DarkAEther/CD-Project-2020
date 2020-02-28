@@ -1,8 +1,11 @@
 
 %{
 #include <stdio.h>
-#include <stdlib.h> 
-int line_num=1;       
+#include <stdlib.h>
+#include "header.h" 
+void yyerror();
+int line_num=1;    
+
 %}
 
 %token KW_AS
@@ -67,28 +70,53 @@ int line_num=1;
 %token COMMA
 %token KW_MAIN
 %token KW_PRINTLN
+%token EOF
 
 %%
-start: Main {printf("\n-------------ACCEPTED----------------\n");} |  ;
-Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOCK;
-Blk: Code Blk | If Blk | While Blk | For Blk | error;
-Code: Eval|Out|Exp|Var_dec;
-Eval: IDENTIFIER ASSIGN Exp STMT_TERMINATOR;
-Exp: Val op Exp| OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS | Val;
-Val: IDENTIFIER | STRING | DECIMAL | FLOAT ;
-op: ARITH | BITWISE | RELATIONAL ;
-Var_dec: KW_LET IDENTIFIER ASSIGN Exp STMT_TERMINATOR ;
-Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR;
-Body: STRING | STRING COMMA Val|;
+start: Main EOF {printf("\n-------------ACCEPTED----------------\n");}
+  |
+  ;
+Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOCK {printf("%s", $$);};
+Blk: Code Blk
+  | If Blk
+  | While Blk
+  | For Blk
+  | 
+  ;
+Code: Eval
+  |Out
+  |Exp
+  |Var_dec
+  ;
+Eval: IDENTIFIER ASSIGN Exp STMT_TERMINATOR
+  ;
+Exp: Val op Exp
+  | OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS
+  | Val
+  ;
+Val: IDENTIFIER
+  | STRING
+  | DECIMAL
+  | FLOAT
+  ;
+op: ARITH
+  | BITWISE
+  | RELATIONAL
+  ;
+Var_dec: KW_LET IDENTIFIER ASSIGN Exp STMT_TERMINATOR
+  ;
+Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
+  ;
+Body: STRING
+  | STRING COMMA Val|;
 If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else ; 
-Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK STMT_TERMINATOR | STMT_TERMINATOR ;
+Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK
+  | 
+  ;
 While: KW_WHILE Exp OPEN_BLOCK Blk CLOSE_BLOCK;
 For: KW_FOR IDENTIFIER KW_IN DECIMAL RANGE DECIMAL OPEN_BLOCK Blk CLOSE_BLOCK ;
 %%
 
 void main(){
         yyparse();
-}
-void yyerror(char *s){
-	printf("ERROR: \"%s\" on line: %d\n",s,line_num);
 }

@@ -1,38 +1,22 @@
 %option yylineno
 %{
 #include <stdio.h>
-#include "yacc.tab.h"
+#include "header.h"
 #include "y.tab.h"
 void comment();
 void yyerror();
 int comment_stack_count = 1;
-extern int line_num;
 int lit=0;
 int scope=0;
 int max_depth=0;
-struct literal {
-	char value[20];
-	char type[10];
-};
-struct id {
-	char name[32];
-	int lineno;
-	char value[20];
-	char dtype[10];
-}; // Identifier token format 
-struct scopes{
-	struct id identifiers[100];
-	int count;
-}; // Scope-specific symbol table
-struct symtbl{
-	struct scopes table[5];
-	struct literal literalTable[500];
-};
-struct symtbl symbolTable;
+
 void dispLit();
 void installLiteral(char *value,char *type);
 void installID(char *name,int lno);
 void dispST();
+
+struct symtbl symbolTable;
+
 %}
 KW_AS as
 KW_BREAK break
@@ -110,7 +94,7 @@ OCTAL_INT 0o[0-7]*
 BIN_INT 0b1*0*
 FLOAT [1-9][0-9]*\.[0-9]+
 
-ARITH_OPERATOR [+\-\/\*]
+ARITH_OPERATOR [+\-\/\*\%]
 BITWISE_OPERATOR ([\^\!]|&&|\|\||<<|>>)
 ASSIGN_OPS (\+\=|\-\=|\*\=|\/\=|%\=|\^\=|&\=|\|\=|<<\=|>>\=)
 ASSIGN \=
@@ -124,7 +108,7 @@ COMMA ,
 MAIN main
 %%
 {WHITE_SPACE} {printf(" ");}
-\n {line_num+=1;}
+\n {;}
 {OPEN_BLOCK} {scope++;if(scope>max_depth){ max_depth=scope;};return OPEN_BLOCK;}
 {CLOSE_BLOCK} {scope--;return CLOSE_BLOCK;}
 {OPEN_PARANTHESIS} {return OPEN_PARANTHESIS;}
@@ -170,8 +154,9 @@ MAIN main
 [0-9]+[a-zA-Z]+ {yyerror();return ERROR;}
 {ARITH_OPERATOR}{2,} {yyerror();return ERROR;}
 {COMMA} {return COMMA;}
+#EOF {dispLit();dispST();return EOF;}
 . {yyerror();}
-#EOF {dispLit();dispST();}
+
 %%
 void comment()
 {
@@ -250,4 +235,8 @@ void dispST(){
 		i++;
 
 	}
+}
+
+void yyerror(char *s){
+	printf("ERROR: \"%s\" on line: %d\n",s, yylineno);
 }
