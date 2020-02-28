@@ -6,14 +6,14 @@
 // You can always return to the original code by clicking the "Reset" button ->
 
 // This is the main function
-fn main(){
+fn main () {
     // Statements here are executed when the compiled binary is called
 
     // Print text to the console
     println!("Hello World!");
-    let a =5+2;
+    let a =5;
     let n=10;
-    
+    let x = 87;
     for i in 1..101 {
         if i < 10 {
             println!("fizzbuzz");
@@ -31,5 +31,4 @@ fn main(){
     // Increment counter
     n= n+ 1;
     }
-}
-#EOF
+}#EOF

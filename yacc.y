@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "header.h" 
+#include <string.h>
+#include "y.tab.h"
 void yyerror();
 int line_num=1;    
-
+extern int scope;
 %}
 
 %token KW_AS
@@ -70,13 +72,13 @@ int line_num=1;
 %token COMMA
 %token KW_MAIN
 %token KW_PRINTLN
-%token EOF
-
+%token EOFI
 %%
-start: Main EOF {printf("\n-------------ACCEPTED----------------\n");}
+start: Main EOFI {printf("\n-------------ACCEPTED----------------\n");}
   |
   ;
-Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOCK {printf("%s", $$);};
+Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOCK
+  ;
 Blk: Code Blk
   | If Blk
   | While Blk
@@ -84,37 +86,42 @@ Blk: Code Blk
   | 
   ;
 Code: Eval
-  |Out
-  |Exp
-  |Var_dec
+  | Out
+  | Exp {$$ = $1;}
+  | Var_dec
   ;
 Eval: IDENTIFIER ASSIGN Exp STMT_TERMINATOR
   ;
 Exp: Val op Exp
   | OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS
-  | Val
+  | Val {$$ = $1;}
   ;
-Val: IDENTIFIER
-  | STRING
-  | DECIMAL
-  | FLOAT
+id: IDENTIFIER {$$= yylval;}
+  ;
+Val: IDENTIFIER {$$ = yylval;}
+  | STRING {$$ = yylval;}
+  | DECIMAL {$$ = yylval;}
+  | FLOAT {$$ = yylval;}
   ;
 op: ARITH
   | BITWISE
   | RELATIONAL
   ;
-Var_dec: KW_LET IDENTIFIER ASSIGN Exp STMT_TERMINATOR
+Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {for (int j = 0; j < symbolTable.table[scope].count; j++){if (strcmp($2,symbolTable.table[scope].identifiers[j].name) == 0){strcpy(symbolTable.table[scope].identifiers[j].value, $4);for (int k = 0; k < 500;k++){if(strcmp(symbolTable.literalTable[k].value,$4)==0){strcpy(symbolTable.table[scope].identifiers[j].dtype, symbolTable.literalTable[k].type);}}}}}
   ;
 Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
   ;
 Body: STRING
-  | STRING COMMA Val|;
-If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else ; 
-Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK
-  | 
+  | STRING COMMA Val
   ;
-While: KW_WHILE Exp OPEN_BLOCK Blk CLOSE_BLOCK;
-For: KW_FOR IDENTIFIER KW_IN DECIMAL RANGE DECIMAL OPEN_BLOCK Blk CLOSE_BLOCK ;
+If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else
+  ; 
+Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK
+  ;
+While: KW_WHILE Exp OPEN_BLOCK Blk CLOSE_BLOCK 
+  ;
+For: KW_FOR IDENTIFIER KW_IN DECIMAL RANGE DECIMAL OPEN_BLOCK Blk CLOSE_BLOCK 
+  ;
 %%
 
 void main(){

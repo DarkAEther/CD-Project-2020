@@ -3,8 +3,9 @@
 #include <stdio.h>
 #include "header.h"
 #include "y.tab.h"
+#include <string.h>
 void comment();
-void yyerror();
+//void yyerror();
 int comment_stack_count = 1;
 int lit=0;
 int scope=0;
@@ -137,25 +138,25 @@ MAIN main
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
 {MULTI_LINE_COMMENT} {comment();}
 {CHARACTER} {installLiteral(yytext,"CHARACTER");return CHARACTER;}
-{STRING} {installLiteral(yytext,"STRING");return STRING;}
+{STRING} {installLiteral(yytext,"STRING");yylval = strdup(yytext);return STRING;}
 {RAW_STRING} {return RAW_STRING;}
 {BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");;return BYTE;}
 {BYTE_STRING} {printf("BYTE_STRING");return BYTE_STRING;}
 {RAW_BYTE_STRING} {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
-{IDENTIFIER_OR_KEYWORD} {installID(yytext,yylineno);return IDENTIFIER;}
+{IDENTIFIER_OR_KEYWORD} {installID(yytext,yylineno);yylval = strdup(yytext);return IDENTIFIER;}
 
-{DECIMAL} {installLiteral(yytext,"DECIMAL");;return DECIMAL;}
+{DECIMAL} {installLiteral(yytext,"DECIMAL");yylval = strdup(yytext);return DECIMAL;}
 ".." {return RANGE;}
 {HEX_INT} {printf("HEX_INT");return HEX_INT;}
 {OCTAL_INT} {printf("OCTAL_INT");return OCTAL_INT;}
-{BIN_INT} {printf("BIN_INT");return BIN_INT;}
-{FLOAT} {installLiteral(yytext,"FLOAT");return FLOAT;}
+{BIN_INT} {printf("BIN_INT");yylval = strdup(yytext);return BIN_INT;}
+{FLOAT} {installLiteral(yytext,"FLOAT");yylval = strdup(yytext);return FLOAT;}
 {STMT_TERMINATOR} {return STMT_TERMINATOR;}
-[0-9]+[a-zA-Z]+ {yyerror();return ERROR;}
-{ARITH_OPERATOR}{2,} {yyerror();return ERROR;}
+[0-9]+[a-zA-Z]+ {yyerror(yytext);return ERROR;}
+{ARITH_OPERATOR}{2,} {yyerror(yytext);return ERROR;}
 {COMMA} {return COMMA;}
-#EOF {dispLit();dispST();return EOF;}
-. {yyerror();}
+#EOF {dispLit();dispST();return EOFI;}
+. {yyerror(yytext);}
 
 %%
 void comment()
@@ -228,7 +229,7 @@ void dispST(){
 		int j=0;
 		printf("Symbol Table at depth %d\n",i);
 		while(j<symbolTable.table[i].count){
-			printf("<Identifier,%s,value,datatype,%d> ",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].lineno);
+			printf("<Identifier,%s,%s,%s,%d> ",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
 			j++;
 		}
 		printf("\n");
@@ -237,6 +238,4 @@ void dispST(){
 	}
 }
 
-void yyerror(char *s){
-	printf("ERROR: \"%s\" on line: %d\n",s, yylineno);
-}
+
