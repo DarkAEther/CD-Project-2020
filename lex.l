@@ -229,7 +229,7 @@ void dispST(){
 		int j=0;
 		printf("Symbol Table at depth %d\n",i);
 		while(j<symbolTable.table[i].count){
-			printf("<Identifier,%s,%s,%s,%d> ",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
+			printf("<Identifier,%s,%s,%s,%d>\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
 			j++;
 		}
 		printf("\n");
