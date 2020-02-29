@@ -12,7 +12,7 @@ fn main (){
     // Print text to the console
     println!("Hello World!");
     
-    let a =5;
+    let a  5;
     let n=10;
     let x = 87;
     for i in 1..101 {
@@ -32,5 +32,4 @@ fn main (){
     // Increment counter
     n= n+ 1;
     }
-}
-#EOF
+} #EOF

@@ -108,7 +108,7 @@ CLOSE_PARANTHESIS \)
 COMMA ,
 MAIN main
 %%
-{WHITE_SPACE} {printf(" ");}
+{WHITE_SPACE} {printf("");}
 \n {;}
 {OPEN_BLOCK} {scope++;if(scope>max_depth){ max_depth=scope;};return OPEN_BLOCK;}
 {CLOSE_BLOCK} {scope--;return CLOSE_BLOCK;}
@@ -138,9 +138,9 @@ MAIN main
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
 {MULTI_LINE_COMMENT} {comment();}
 {CHARACTER} {installLiteral(yytext,"CHARACTER");return CHARACTER;}
-{STRING} {installLiteral(yytext,"STRING");yylval = strdup(yytext);return STRING;}
+{STRING} {installLiteral(yytext,"STRING"); yylval = strdup(yytext); return STRING;}
 {RAW_STRING} {return RAW_STRING;}
-{BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");;return BYTE;}
+{BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");return BYTE;}
 {BYTE_STRING} {printf("BYTE_STRING");return BYTE_STRING;}
 {RAW_BYTE_STRING} {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
 {IDENTIFIER_OR_KEYWORD} {installID(yytext,yylineno);yylval = strdup(yytext);return IDENTIFIER;}
@@ -200,7 +200,7 @@ void installLiteral(char *value, char *type) {
 void dispLit(){
 	int i;
 	for (i = 0; i < lit; i++)
-		printf("Literal: %s \t Type: %s \n", symbolTable.literalTable[i].value, symbolTable.literalTable[i].type);
+		printf("Literal: %-10s \t Type: %-10s \n", symbolTable.literalTable[i].value, symbolTable.literalTable[i].type);
 
 }
 void installID(char *name,int lno){
@@ -225,11 +225,21 @@ void installID(char *name,int lno){
 }
 void dispST(){
 	int i=0;
+	FILE* fp = fopen("sym1.txt", "w");
+	
 	while(i<max_depth){
 		int j=0;
-		printf("Symbol Table at depth %d\n",i);
+		//raw_format = "{}"
+		char* name = "Name";
+		char* value = "Value";
+		char* dtype = "DataType";
+		char* lineno = "LineNo.";
+		fprintf(fp, "Symbol Table at depth %d\n",i);
+		fprintf(fp, "Type of Symbol\t%-10s\t%-10s\t%-10s\t%-10s\t\n", name, value, dtype, lineno);
+		//f = fopen("symtable.txt", "w");
 		while(j<symbolTable.table[i].count){
-			printf("<Identifier,%s,%s,%s,%d>\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
+			
+			fprintf(fp, "Identifier\t%-10s\t%-10s\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
 			j++;
 		}
 		printf("\n");

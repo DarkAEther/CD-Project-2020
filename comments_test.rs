@@ -1,4 +1,4 @@
-
-fn main() {
-
+fn main(){
+    let a = 10;
 }
+#EOF
