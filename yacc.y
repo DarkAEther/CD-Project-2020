@@ -1,4 +1,3 @@
-
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +8,6 @@ void yyerror();
 int line_num=1;    
 extern int scope;
 %}
-
 %token KW_AS
 %token KW_BREAK
 %token KW_CONST

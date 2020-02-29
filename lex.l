@@ -17,6 +17,8 @@ void installID(char *name,int lno);
 void dispST();
 
 struct symtbl symbolTable;
+symbolTable.literal_count= 0;
+symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal));
 
 %}
 KW_AS as
@@ -193,16 +195,50 @@ loop:
 }
 
 void installLiteral(char *value, char *type) {
-	strcpy(symbolTable.literalTable[lit].value, value);
+	symbolTable.literalTable = (struct literal*)realloc(symbolTable.literalTable,sizeof(struct literal)*(symbolTable.literal_count+1));
+	if (strcmp(type,"DECIMAL") == 0){
+		symbolTable.literalTable[symbolTable.literal_count].discriminator = 0;
+		symbolTable.literalTable[symbolTable.literal_count].value.integer = atoi(value);
+	}else{
+		if (strcmp(type,"FLOAT") == 0){
+			symbolTable.literalTable[symbolTable.literal_count].discriminator = 1;
+			symbolTable.literalTable[symbolTable.literal_count].value.floating = atof(value);
+		}else{
+			if (strcmp(type,"CHARACTER")==0){
+				symbolTable.literalTable[symbolTable.literal_count].discriminator = 2;
+				symbolTable.literalTable[symbolTable.literal_count].value.character = *value;
+			}else{
+				if (strcmp(type,"CHARACTER")==0){
+					symbolTable.literalTable[symbolTable.literal_count].discriminator = 3;
+					strcpy(symbolTable.literalTable[symbolTable.literal_count].value.string,value);
+				}
+			}
+		}
+	}
 	strcpy(symbolTable.literalTable[lit].type, type);
-	lit++;
+	symbolTable.literal_count++;
 }
 void dispLit(){
 	int i;
-	for (i = 0; i < lit; i++)
-		printf("Literal: %-10s \t Type: %-10s \n", symbolTable.literalTable[i].value, symbolTable.literalTable[i].type);
-
+	for (i = 0; i < symbolTable.literal_count; i++){
+		if (symbolTable.literalTable[i].discriminator == 0){
+			printf("Literal: %-10d \t Type: %-10s \n", symbolTable.literalTable[i].value.integer, symbolTable.literalTable[i].type);
+		}else{
+			if (symbolTable.literalTable[i].discriminator == 1){
+				printf("Literal: %-10f \t Type: %-10s \n", symbolTable.literalTable[i].value.floating, symbolTable.literalTable[i].type);
+			}else{
+				if (symbolTable.literalTable[i].discriminator == 2){
+					printf("Literal: %-10c \t Type: %-10s \n", symbolTable.literalTable[i].value.character, symbolTable.literalTable[i].type);
+				}else{
+					if (symbolTable.literalTable[i].discriminator == 3){
+						printf("Literal: %-10s \t Type: %-10s \n", symbolTable.literalTable[i].value.string, symbolTable.literalTable[i].type);
+					}
+				}
+			}
+		}
+	}
 }
+
 void installID(char *name,int lno){
 	int i;
 	int present=1;
@@ -210,41 +246,51 @@ void installID(char *name,int lno){
 		if(strcmp(symbolTable.table[scope].identifiers[i].name, name)==0){
 			present=0;
 			break;
-		}
-		
+		}	
 	}
-	
 	if(i==symbolTable.table[scope].count){
 		int x=symbolTable.table[scope].count;
 		strcpy(symbolTable.table[scope].identifiers[x].name, name);
 		symbolTable.table[scope].identifiers[i].lineno=lno;
 		symbolTable.table[scope].count++;
-
 	}
-	
 }
+
 void dispST(){
 	int i=0;
-	FILE* fp = fopen("sym1.txt", "w");
-	
+	FILE* fp = fopen("symbol_table.txt", "w");
 	while(i<max_depth){
 		int j=0;
-		//raw_format = "{}"
 		char* name = "Name";
 		char* value = "Value";
 		char* dtype = "DataType";
 		char* lineno = "LineNo.";
 		fprintf(fp, "Symbol Table at depth %d\n",i);
 		fprintf(fp, "Type of Symbol\t%-10s\t%-10s\t%-10s\t%-10s\t\n", name, value, dtype, lineno);
-		//f = fopen("symtable.txt", "w");
 		while(j<symbolTable.table[i].count){
+			if (symbolTable.literalTable[i].discriminator == 0){
+				fprintf(fp, "Identifier\t%-10s\t%-10d\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.integer,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
 			
-			fprintf(fp, "Identifier\t%-10s\t%-10s\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
+			}else{
+				if (symbolTable.literalTable[i].discriminator == 1){
+					fprintf(fp, "Identifier\t%-10s\t%-10f\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.floating,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
+			;
+				}else{
+					if (symbolTable.literalTable[i].discriminator == 2){
+						fprintf(fp, "Identifier\t%-10s\t%-10c\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.character,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
+			
+					}else{
+						if (symbolTable.literalTable[i].discriminator == 3){
+							fprintf(fp, "Identifier\t%-10s\t%-10s\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
+			
+						}
+					}
+				}
+			}
 			j++;
 		}
 		printf("\n");
 		i++;
-
 	}
 }
 
