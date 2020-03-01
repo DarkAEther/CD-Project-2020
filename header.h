@@ -1,4 +1,11 @@
-struct value{
+
+union value{
+		int integer;
+		double floating;
+		char character[3];
+		char* string;
+};
+struct value_wrap{
 	int discriminator;
 	/*
 		0 - DECIMAL
@@ -6,12 +13,7 @@ struct value{
 		2 - CHAR
 		3 - STRING
 	*/
-	union value{
-		int integer;
-		float floating;
-		char character;
-		char* string;
-	};
+	union value value;
 };
 struct literal{
 	int discriminator;
@@ -21,19 +23,14 @@ struct literal{
 		2 - CHAR
 		3 - STRING
 	*/
-	union value{
-		int integer;
-		float floating;
-		char character;
-		char* string;
-	};
+	union value value;
 	char type[10];
 };
 struct id {
 	char name[32];
 	int lineno;
-	struct value;
-	char dtype[10];
+	struct value_wrap value;
+	char type[10];
 }; // Identifier token format
 struct scope_vars{
 	struct id identifiers[100];

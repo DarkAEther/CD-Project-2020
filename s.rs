@@ -12,10 +12,15 @@ fn main (){
     // Print text to the console
     println!("Hello World!");
     
-    let a  5;
+    let a = 5;
     let n=10;
     let x = 87;
+    let floatyfloaty = 97.42;
+    let crazychar = 'c';
+    let crazystrings = "gatetohell";
     for i in 1..101 {
+        let v = 98923;
+        let crazychar = 'c';
         if i < 10 {
             println!("fizzbuzz");
         } else {

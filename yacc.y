@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "header.h" 
 #include <string.h>
-#include "y.tab.h"
 void yyerror();
 int line_num=1;    
 extern int scope;
@@ -103,12 +102,54 @@ Val: IDENTIFIER {$$ = yylval;}
   | STRING {$$ = yylval;}
   | DECIMAL {$$ = yylval;}
   | FLOAT {$$ = yylval;}
+  | CHARACTER {$$ = yylval;}
   ;
 op: ARITH
   | BITWISE
   | RELATIONAL
   ;
-Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {printf("%s\n", $2); for (int j = 0; j < symbolTable.table[scope].count; j++){if (strcmp($2,symbolTable.table[scope].identifiers[j].name) == 0){strcpy(symbolTable.table[scope].identifiers[j].value, $4);for (int k = 0; k < 500;k++){if(strcmp(symbolTable.literalTable[k].value,$4)==0){strcpy(symbolTable.table[scope].identifiers[j].dtype, symbolTable.literalTable[k].type);}}}}}
+Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {
+  for (int j = 0; j < symbolTable.table[scope].count; j++){
+    if (strcmp($2,symbolTable.table[scope].identifiers[j].name) == 0){
+      for (int k = 0; k < symbolTable.literal_count;k++){
+        if (symbolTable.literalTable[k].discriminator == 0){
+          if(symbolTable.literalTable[k].value.integer == atoi($4)){
+            symbolTable.table[scope].identifiers[j].value.discriminator = 0;
+            strcpy(symbolTable.table[scope].identifiers[j].type, symbolTable.literalTable[k].type);
+            symbolTable.table[scope].identifiers[j].value.value.integer= atoi($4);
+          }
+        }else{
+          if (symbolTable.literalTable[k].discriminator == 1){
+            
+            if(symbolTable.literalTable[k].value.floating == atof($4)){
+              symbolTable.table[scope].identifiers[j].value.discriminator = 1;
+              strcpy(symbolTable.table[scope].identifiers[j].type, symbolTable.literalTable[k].type);
+              symbolTable.table[scope].identifiers[j].value.value.floating= atof($4);
+            }
+          }else{
+            if (symbolTable.literalTable[k].discriminator == 2){
+              if(strcmp(symbolTable.literalTable[k].value.character,$4)==0){
+                symbolTable.table[scope].identifiers[j].value.discriminator = 2;
+                strcpy(symbolTable.table[scope].identifiers[j].type, symbolTable.literalTable[k].type);
+                strcpy(symbolTable.table[scope].identifiers[j].value.value.character,$4);
+                
+              }
+            }else{
+              if (symbolTable.literalTable[k].discriminator == 3){
+                if(strcmp(symbolTable.literalTable[k].value.string, $4)==0){
+                  symbolTable.table[scope].identifiers[j].value.discriminator = 3;
+                  strcpy(symbolTable.table[scope].identifiers[j].type, symbolTable.literalTable[k].type);
+                  symbolTable.table[scope].identifiers[j].value.value.string = (char*)malloc(sizeof(char)*strlen($4));
+                  strcpy(symbolTable.table[scope].identifiers[j].value.value.string,$4);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
   ;
 Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
   ;
@@ -126,10 +167,12 @@ For: KW_FOR IDENTIFIER KW_IN DECIMAL RANGE DECIMAL OPEN_BLOCK Blk CLOSE_BLOCK
 %%
 
 int main(){
+        symbolTable.literal_count = 0;
+        symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal));
         yyparse();
         return 0;
 }
 void yyerror(char *s){
 	printf("ERROR: \"%s\" on line: %d\n",s, yylineno);
-	yyparse();
+  yyparse();
 }

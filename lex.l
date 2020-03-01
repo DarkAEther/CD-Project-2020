@@ -2,8 +2,9 @@
 %{
 #include <stdio.h>
 #include "header.h"
-#include "y.tab.h"
+#include "yacc.tab.h"
 #include <string.h>
+#include <stdlib.h>
 void comment();
 //void yyerror();
 int comment_stack_count = 1;
@@ -17,8 +18,7 @@ void installID(char *name,int lno);
 void dispST();
 
 struct symtbl symbolTable;
-symbolTable.literal_count= 0;
-symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal));
+
 
 %}
 KW_AS as
@@ -139,7 +139,7 @@ MAIN main
 {MAIN} {return KW_MAIN;}
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
 {MULTI_LINE_COMMENT} {comment();}
-{CHARACTER} {installLiteral(yytext,"CHARACTER");return CHARACTER;}
+{CHARACTER} {installLiteral(yytext,"CHARACTER");yylval = strdup(yytext);return CHARACTER;}
 {STRING} {installLiteral(yytext,"STRING"); yylval = strdup(yytext); return STRING;}
 {RAW_STRING} {return RAW_STRING;}
 {BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");return BYTE;}
@@ -206,32 +206,33 @@ void installLiteral(char *value, char *type) {
 		}else{
 			if (strcmp(type,"CHARACTER")==0){
 				symbolTable.literalTable[symbolTable.literal_count].discriminator = 2;
-				symbolTable.literalTable[symbolTable.literal_count].value.character = *value;
+				strcpy(symbolTable.literalTable[symbolTable.literal_count].value.character,value);
 			}else{
-				if (strcmp(type,"CHARACTER")==0){
+				if (strcmp(type,"STRING")==0){
 					symbolTable.literalTable[symbolTable.literal_count].discriminator = 3;
+					symbolTable.literalTable[symbolTable.literal_count].value.string = (char*)malloc(sizeof(char)*strlen(value));
 					strcpy(symbolTable.literalTable[symbolTable.literal_count].value.string,value);
 				}
 			}
 		}
 	}
-	strcpy(symbolTable.literalTable[lit].type, type);
+	strcpy(symbolTable.literalTable[symbolTable.literal_count].type, type);
 	symbolTable.literal_count++;
 }
 void dispLit(){
 	int i;
 	for (i = 0; i < symbolTable.literal_count; i++){
 		if (symbolTable.literalTable[i].discriminator == 0){
-			printf("Literal: %-10d \t Type: %-10s \n", symbolTable.literalTable[i].value.integer, symbolTable.literalTable[i].type);
+			printf("Literal: %-10d \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.integer, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
 		}else{
 			if (symbolTable.literalTable[i].discriminator == 1){
-				printf("Literal: %-10f \t Type: %-10s \n", symbolTable.literalTable[i].value.floating, symbolTable.literalTable[i].type);
+				printf("Literal: %-10f \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.floating, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
 			}else{
 				if (symbolTable.literalTable[i].discriminator == 2){
-					printf("Literal: %-10c \t Type: %-10s \n", symbolTable.literalTable[i].value.character, symbolTable.literalTable[i].type);
+					printf("Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.character, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
 				}else{
 					if (symbolTable.literalTable[i].discriminator == 3){
-						printf("Literal: %-10s \t Type: %-10s \n", symbolTable.literalTable[i].value.string, symbolTable.literalTable[i].type);
+						printf("Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.string, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
 					}
 				}
 			}
@@ -266,23 +267,23 @@ void dispST(){
 		char* dtype = "DataType";
 		char* lineno = "LineNo.";
 		fprintf(fp, "Symbol Table at depth %d\n",i);
-		fprintf(fp, "Type of Symbol\t%-10s\t%-10s\t%-10s\t%-10s\t\n", name, value, dtype, lineno);
+		fprintf(fp, "%-20s\t%-20s\t%-30s\t%-20s\t%-20s\t\n", "Type of Symbol" ,name, value, dtype, lineno);
 		while(j<symbolTable.table[i].count){
-			if (symbolTable.literalTable[i].discriminator == 0){
-				fprintf(fp, "Identifier\t%-10s\t%-10d\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.integer,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
-			
+			if (symbolTable.table[i].identifiers[j].value.discriminator == 0){
+				fprintf(fp, "%-20s\t%-20s\t%-30d\t%-20s\t%-20d\t\n","Identifier",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.value.integer,symbolTable.table[i].identifiers[j].type,symbolTable.table[i].identifiers[j].lineno);
+				
 			}else{
-				if (symbolTable.literalTable[i].discriminator == 1){
-					fprintf(fp, "Identifier\t%-10s\t%-10f\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.floating,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
-			;
+				if (symbolTable.table[i].identifiers[j].value.discriminator == 1){
+					fprintf(fp, "%-20s\t%-20s\t%-30f\t%-20s\t%-20d\t\n","Identifier",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.value.floating,symbolTable.table[i].identifiers[j].type,symbolTable.table[i].identifiers[j].lineno);
+			
 				}else{
-					if (symbolTable.literalTable[i].discriminator == 2){
-						fprintf(fp, "Identifier\t%-10s\t%-10c\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.character,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
-			
+					if (symbolTable.table[i].identifiers[j].value.discriminator == 2){
+						fprintf(fp, "%-20s\t%-20s\t%-30s\t%-20s\t%-20d\t\n","Identifier",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.value.character,symbolTable.table[i].identifiers[j].type,symbolTable.table[i].identifiers[j].lineno);
+
 					}else{
-						if (symbolTable.literalTable[i].discriminator == 3){
-							fprintf(fp, "Identifier\t%-10s\t%-10s\t%-10s\t%-10d\t\n",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value,symbolTable.table[i].identifiers[j].dtype,symbolTable.table[i].identifiers[j].lineno);
-			
+						if (symbolTable.table[i].identifiers[j].value.discriminator == 3){
+							fprintf(fp, "%-20s\t%-20s\t%-30s\t%-20s\t%-20d\t\n","Identifier",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.value.string,symbolTable.table[i].identifiers[j].type,symbolTable.table[i].identifiers[j].lineno);
+							
 						}
 					}
 				}
