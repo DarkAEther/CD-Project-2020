@@ -12,8 +12,8 @@ fn main (){
     // Print text to the console
     println!("Hello World!");
     
-    let a = 5;
-    let n=10;
+    let a = 5+6969;
+    let n=10- 3;
     let x = 87;
     let floatyfloaty = 97.42;
     let crazychar = 'c';

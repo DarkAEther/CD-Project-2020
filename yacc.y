@@ -87,15 +87,60 @@ Blk: Code Blk
   ;
 Code: Eval
   | Out
-  | Exp {$$ = $1;}
-  | Var_dec
+  | Var_dec {$$ = 1;}
   ;
-Eval: IDENTIFIER ASSIGN Exp STMT_TERMINATOR
+Eval: IDENTIFIER ASSIGN DECIMALEXP STMT_TERMINATOR
+  | IDENTIFIER ASSIGN FLOATEXP STMT_TERMINATOR
   ;
-Exp: Val op Exp
-  | OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS
-  | Val {$$ = $1;}
+DECIMALEXP: DECIMAL op DECIMALEXP {
+  switch ($2){
+    case '+':{
+      $$ = $1 + $3;break;
+    }
+    case '-':{
+      $$ = $1 - $3;break;
+    }
+    case '*':{
+      $$ = $1 * $3;break;
+    }
+    case '/':{
+      if ($3 == 0){
+        printf("ERROR: ZERO DIVISION\n"); $$=1;
+      }else{
+        $$ = $1 / $3;
+      }
+      break;
+    }
+  }
+}
+  | OPEN_PARANTHESIS DECIMALEXP CLOSE_PARANTHESIS
+  | DECIMAL {$$ = $1;}
   ;
+FLOATEXP: FLOAT op FLOATEXP {
+  switch ($2){
+    case '+':{
+      $$ = $1 + $3;break;
+    }
+    case '-':{
+      $$ = $1 - $3;break;
+    }
+    case '*':{
+      $$ = $1 * $3;break;
+    }
+    case '/':{
+      if ($3 == 0){
+        printf("ERROR: ZERO DIVISION\n"); $$=1;
+      }else{
+        $$ = $1 / $3;
+      }
+      break;
+    }
+  }
+  }
+  | OPEN_PARANTHESIS FLOATEXP CLOSE_PARANTHESIS
+  | FLOAT {$$ = $1;}
+  ;
+RELATIONALEXP: Val RELATIONAL Val;
 id: IDENTIFIER {$$= yylval;}
   ;
 Val: IDENTIFIER {$$ = yylval;}
@@ -104,11 +149,11 @@ Val: IDENTIFIER {$$ = yylval;}
   | FLOAT {$$ = yylval;}
   | CHARACTER {$$ = yylval;}
   ;
-op: ARITH
-  | BITWISE
-  | RELATIONAL
+op: ARITH {$$ = $1;}
+  | BITWISE {$$ = $1;}
+  | RELATIONAL {$$ = $1;}
   ;
-Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {
+Var_dec: KW_LET id ASSIGN Val STMT_TERMINATOR {
   for (int j = 0; j < symbolTable.table[scope].count; j++){
     if (strcmp($2,symbolTable.table[scope].identifiers[j].name) == 0){
       for (int k = 0; k < symbolTable.literal_count;k++){
@@ -150,17 +195,35 @@ Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {
     }
   }
 }
+  | KW_LET id ASSIGN DECIMALEXP STMT_TERMINATOR {
+      for (int j = 0; j < symbolTable.table[scope].count; j++){
+        if (strcmp($2,symbolTable.table[scope].identifiers[j].name) == 0){
+            symbolTable.table[scope].identifiers[j].value.discriminator = 0;
+            strcpy(symbolTable.table[scope].identifiers[j].type, "DECIMAL");
+            symbolTable.table[scope].identifiers[j].value.value.integer= $4;
+        }
+      }
+  }
+  | KW_LET id ASSIGN FLOATEXP STMT_TERMINATOR {
+      for (int j = 0; j < symbolTable.table[scope].count; j++){
+        if (strcmp($2,symbolTable.table[scope].identifiers[j].name) == 0){
+            symbolTable.table[scope].identifiers[j].value.discriminator = 0;
+            strcpy(symbolTable.table[scope].identifiers[j].type, "FLOAT");
+            symbolTable.table[scope].identifiers[j].value.value.floating= $4;
+        }
+      }
+  }
   ;
 Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
   ;
 Body: STRING
   | STRING COMMA Val
   ;
-If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else
+If: KW_IF RELATIONALEXP OPEN_BLOCK Blk CLOSE_BLOCK Else
   ; 
 Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK
   ;
-While: KW_WHILE Exp OPEN_BLOCK Blk CLOSE_BLOCK 
+While: KW_WHILE RELATIONALEXP OPEN_BLOCK Blk CLOSE_BLOCK 
   ;
 For: KW_FOR IDENTIFIER KW_IN DECIMAL RANGE DECIMAL OPEN_BLOCK Blk CLOSE_BLOCK 
   ;
