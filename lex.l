@@ -260,7 +260,7 @@ void installID(char *name,int lno){
 void dispST(){
 	int i=0;
 	FILE* fp = fopen("symbol_table.txt", "w");
-	while(i<max_depth){
+	while(i<=max_depth){
 		int j=0;
 		char* name = "Name";
 		char* value = "Value";
@@ -293,6 +293,7 @@ void dispST(){
 		printf("\n");
 		i++;
 	}
+	fclose(fp);
 }
 
 

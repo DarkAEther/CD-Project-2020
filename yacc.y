@@ -93,7 +93,7 @@ Code: Eval
 Eval: IDENTIFIER ASSIGN Exp STMT_TERMINATOR
   ;
 Exp: Val op Exp
-  | OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS
+  | OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS {$$ = $2;}
   | Val {$$ = $1;}
   ;
 id: IDENTIFIER {$$= yylval;}

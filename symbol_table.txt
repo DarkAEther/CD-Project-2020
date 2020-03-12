@@ -1,0 +1,20 @@
+Symbol Table at depth 0
+Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
+Symbol Table at depth 1
+Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
+Identifier          	a                   	5                             	DECIMAL             	15                  	
+Identifier          	n                   	10                            	DECIMAL             	16                  	
+Identifier          	x                   	87                            	DECIMAL             	17                  	
+Identifier          	floatyfloaty        	97.420000                     	FLOAT               	18                  	
+Identifier          	crazychar           	'c'                           	CHARACTER           	19                  	
+Identifier          	crazystrings        	"gatetohell"                  	STRING              	20                  	
+Identifier          	i                   	0                             	                    	21                  	
+Symbol Table at depth 2
+Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
+Identifier          	v                   	98923                         	DECIMAL             	22                  	
+Identifier          	crazychar           	'c'                           	CHARACTER           	23                  	
+Identifier          	i                   	0                             	                    	24                  	
+Identifier          	n                   	0                             	                    	31                  	
+Symbol Table at depth 3
+Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
+Identifier          	n                   	0                             	                    	27                  	
