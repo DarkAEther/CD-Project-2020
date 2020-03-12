@@ -139,20 +139,20 @@ MAIN main
 {MAIN} {return KW_MAIN;}
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
 {MULTI_LINE_COMMENT} {comment();}
-{CHARACTER} {installLiteral(yytext,"CHARACTER");yylval = strdup(yytext);return CHARACTER;}
-{STRING} {installLiteral(yytext,"STRING"); yylval = strdup(yytext); return STRING;}
+{CHARACTER} {installLiteral(yytext,"CHARACTER");yylval.str = strdup(yytext);return CHARACTER;}
+{STRING} {installLiteral(yytext,"STRING"); yylval.str = strdup(yytext); return STRING;}
 {RAW_STRING} {return RAW_STRING;}
 {BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");return BYTE;}
 {BYTE_STRING} {printf("BYTE_STRING");return BYTE_STRING;}
 {RAW_BYTE_STRING} {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
-{IDENTIFIER_OR_KEYWORD} {installID(yytext,yylineno);yylval = strdup(yytext);return IDENTIFIER;}
+{IDENTIFIER_OR_KEYWORD} {installID(yytext,yylineno);yylval.str = strdup(yytext);return IDENTIFIER;}
 
-{DECIMAL} {installLiteral(yytext,"DECIMAL");yylval = strdup(yytext);return DECIMAL;}
+{DECIMAL} {installLiteral(yytext,"DECIMAL");yylval.str = strdup(yytext);return DECIMAL;}
 ".." {return RANGE;}
 {HEX_INT} {printf("HEX_INT");return HEX_INT;}
 {OCTAL_INT} {printf("OCTAL_INT");return OCTAL_INT;}
-{BIN_INT} {printf("BIN_INT");yylval = strdup(yytext);return BIN_INT;}
-{FLOAT} {installLiteral(yytext,"FLOAT");yylval = strdup(yytext);return FLOAT;}
+{BIN_INT} {printf("BIN_INT");yylval.str = strdup(yytext);return BIN_INT;}
+{FLOAT} {installLiteral(yytext,"FLOAT");yylval.str = strdup(yytext);return FLOAT;}
 {STMT_TERMINATOR} {return STMT_TERMINATOR;}
 [0-9]+[a-zA-Z]+ {yyerror(yytext);return ERROR;}
 {ARITH_OPERATOR}{2,} {yyerror(yytext);return ERROR;}

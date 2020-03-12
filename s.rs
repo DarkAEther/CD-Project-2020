@@ -11,7 +11,7 @@ fn main (){
 
     // Print text to the console
     println!("Hello World!");
-    
+    let a
     let a = 5;
     let n=10;
     let x = 87;
