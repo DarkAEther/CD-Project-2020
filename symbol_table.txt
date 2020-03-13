@@ -2,4 +2,9 @@ Symbol Table at depth 0
 Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
 Symbol Table at depth 1
 Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
-Identifier          	a                   	10                            	DECIMAL             	2                   	
+Identifier          	a                   	0                             	                    	2                   	
+Identifier          	b                   	5                             	DECIMAL             	3                   	
+Symbol Table at depth 2
+Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
+Identifier          	dp                  	56                            	DECIMAL             	5                   	
+Identifier          	pasdaf              	24                            	DECIMAL             	7                   	

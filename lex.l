@@ -118,9 +118,9 @@ MAIN main
 {CLOSE_PARANTHESIS} {return CLOSE_PARANTHESIS;}
 {ASSIGN_OPS} {return ASSIGN_OPS;}
 {ASSIGN} {return ASSIGN;}
-{RELATIONAL} {return RELATIONAL;}
-{ARITH_OPERATOR} {return ARITH;}
-{BITWISE_OPERATOR} {return BITWISE;}
+{RELATIONAL} {yylval.str = strdup(yytext);return RELATIONAL;}
+{ARITH_OPERATOR} {yylval.str = strdup(yytext);return ARITH;}
+{BITWISE_OPERATOR} {yylval.str = strdup(yytext);return BITWISE;}
 {KW_AS} {return KW_AS;}
 {KW_BREAK} {return KW_BREAK;}
 {KW_CONST} {return KW_CONST;}
