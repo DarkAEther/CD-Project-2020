@@ -25,22 +25,31 @@ NODE* get_new_node(char* token,int child_nodes,NODE** children){
   return newnode;
 }
 NODE** queue = NULL;
-int queue_top = -1;
-
-void enqueue(NODE** queue,NODE* item){
+int queue_front = -1;
+int queue_rear = -1;
+void enqueue(NODE* item){
   if (queue == NULL){
-    queue = (NODE**)calloc(100,sizeof(NODE*));
+    queue = (NODE**)malloc(100*sizeof(NODE*));
+    queue_front = 0;
   }
-  queue[++queue_top] = item;
+  queue_rear++;
+  printf("QUEUE REAR %d\n",queue_rear);
+  queue[queue_rear] = item;
+  printf("%s\n",queue[queue_rear]->value.value.string);fflush(stdout);
 }
-NODE* dequeue(NODE** queue){
-  if (queue_top != -1){
+NODE* dequeue(){
+  if (queue_front != -1 && queue_front <= queue_rear){
     //not empty
-    NODE* temp = queue[queue_top--];
-    if (queue[queue_top]==NULL){
+    printf("%d\n",queue_rear);
+    NODE* temp = queue[queue_front];
+    queue_front++;
+    printf("DQ 1\n");fflush(stdout);
+    if (queue_front > queue_rear){
       //empty
       free(queue);
-      queue_top = -1;
+      queue = NULL;
+      queue_front = -1;
+      queue_rear = -1;
     }
     return temp;
   }else{
@@ -48,18 +57,25 @@ NODE* dequeue(NODE** queue){
   }
 }
 void display_AST_BFS(NODE* root){
-  enqueue(queue,root);
+  enqueue(root);
+  printf("CAME HERE\n");fflush(stdout);
   NODE* current;int currlvl = 0;
-  while (queue_top!= -1){
-    current = dequeue(queue);
-    if (currlvl != current->level){
-      printf("\n");currlvl = current->level;
-    }
+  while (queue_front!= -1){
+    current = dequeue();
     assert (current !=NULL);
-    printf(" %s ",current->value.value.string);
+    printf("ASSERTION VALID\n"); fflush(stdout);
+    if (currlvl != current->level){
+      printf("LEVEL change to %d\n",current->level);currlvl = current->level;
+    }
+    printf("CAME HERE TWO\n");fflush(stdout);
+   
+    printf(" %s ",current->value.value.string);fflush(stdout);
+    printf("CAME HERE THREE\n");fflush(stdout);
     for (int i = 0;i < current->child_count;i++){
       current->children[i]->level = currlvl+1;
-      enqueue(queue,current->children[i]);
+      if (current->children != NULL){
+        enqueue(current->children[i]);
+      }
     }
   }
 }
@@ -137,7 +153,7 @@ void display_AST_BFS(NODE* root){
 %type <node> Main Blk Code Eval Exp id Val op Var_dec
 %type <node> Out Body If Else For While
 %%
-start: Main EOFI {printf("\n-------------ACCEPTED----------------\n");display_AST_BFS($1);}
+start: Main EOFI {printf("\n-------------ACCEPTED----------------\n");}
   | Blk
   | EOFI
   | error ';'
@@ -183,12 +199,10 @@ op: ARITH
   | RELATIONAL
   ;
 Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {
-  printf("FRIGGINHERE");fflush(stdout);
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-  printf("FRIGGINHERE");fflush(stdout);
   kids[0]= $1; kids[1] = $2; kids[2]=$3; kids[3] = $4; kids[4] = $5;
-  printf("FRIGGINHERE");fflush(stdout);
-  $$ = get_new_node("VARDEC",5,kids);printf("FRIGGINHERE");fflush(stdout);
+  $$ = get_new_node("VARDEC",5,kids);
+  display_AST_BFS($$);
   for (int j = 0; j < symbolTable.table[scope].count; j++){
     if (strcmp($2->value.value.string,symbolTable.table[scope].identifiers[j].name) == 0){
       for (int k = 0; k < symbolTable.literal_count;k++){

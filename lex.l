@@ -223,16 +223,16 @@ void dispLit(){
 	int i;
 	for (i = 0; i < symbolTable.literal_count; i++){
 		if (symbolTable.literalTable[i].discriminator == 0){
-			printf("Literal: %-10d \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.integer, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
+			printf("Literal: %-10d \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.integer, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);fflush(stdout);
 		}else{
 			if (symbolTable.literalTable[i].discriminator == 1){
-				printf("Literal: %-10f \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.floating, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
+				printf("Literal: %-10f \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.floating, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);fflush(stdout);
 			}else{
 				if (symbolTable.literalTable[i].discriminator == 2){
-					printf("Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.character, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
+					printf("Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.character, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);fflush(stdout);
 				}else{
 					if (symbolTable.literalTable[i].discriminator == 3){
-						printf("Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.string, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
+						printf("Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.string, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);fflush(stdout);
 					}
 				}
 			}
