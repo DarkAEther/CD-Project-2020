@@ -8,11 +8,14 @@ fn main(){
     }else{
         let pasdaf = 24;
     }
-    if a==6{
+    if a+6{
         let vlo = 83;
     }
     for i in  2..189{
         a = a + 1;
+    }
+    while a+7{
+        let v =983;
     }
 }
 #EOF

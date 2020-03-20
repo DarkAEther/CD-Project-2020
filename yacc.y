@@ -8,6 +8,7 @@ void yyerror();
 int line_num=1;  
 int error_count = 0;  
 extern int scope;
+
 char* CUSTYPES[] ={"ID\0","STRING\0","DECIMAL\0","FLOAT\0","CHARACTER\0","BOOLEAN\0","OP\0","KW\0"};
 typedef struct node{
   struct node** children;
@@ -15,6 +16,7 @@ typedef struct node{
   struct value_wrap value;
   int level;
   enum TYPE type;
+  enum TYPE core_type;
 } NODE;
 
 
@@ -251,6 +253,7 @@ Eval: Val ASSIGN Exp STMT_TERMINATOR{
 }
   ;
 Exp: Val op Exp {
+  
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*2);
   kids[0] = $1; kids[1] = $3; 
   $$ = mod_node($2,2,kids);
@@ -264,8 +267,8 @@ Exp: Val op Exp {
     for(int i = 0; i < symbolTable.table[k].count;i++){
       //printf("TEST %s %s %d\n",symbolTable.table[k].identifiers[i].name,$1->value.value.string,strcmp(symbolTable.table[k].identifiers[i].name,($1)->value.value.string));
       if (strcmp(symbolTable.table[k].identifiers[i].name,$1->value.value.string)==0){
-        // The variable has been declared
-        //printf("%s %s %d\n",symbolTable.table[k].identifiers[i].type,"",strcmp(symbolTable.table[k].identifiers[i].type,""));
+        // The variable has been found
+        //printf("D1#%s# #%s# %d\n",symbolTable.table[k].identifiers[i].type,"",strcmp(symbolTable.table[k].identifiers[i].type,""));
         if (strcmp(symbolTable.table[k].identifiers[i].type,"") != 0){
             //declared var
             //printf("I am here\n");
@@ -296,13 +299,13 @@ Exp: Val op Exp {
     for (int k = scope; k >=0 && found == 0; k--){
     for(int i = 0; i < symbolTable.table[k].count;i++){
       //printf("TEST %s %s %d\n",symbolTable.table[k].identifiers[i].name,$1->value.value.string,strcmp(symbolTable.table[k].identifiers[i].name,($1)->value.value.string));
-      if (strcmp(symbolTable.table[k].identifiers[i].name,($1)->value.value.string)==0){
-        // The variable has been declared
-        //printf("%s %s %d\n",symbolTable.table[k].identifiers[i].type,"",strcmp(symbolTable.table[k].identifiers[i].type,""));
+      if (strcmp(symbolTable.table[k].identifiers[i].name,($3)->value.value.string)==0){
+        // The variable has been found
         if (strcmp(symbolTable.table[k].identifiers[i].type,"") != 0){
             //declared var
             //printf("I am here\n");
             found = 1;
+            //printf("###%s %s %d\n",symbolTable.table[k].identifiers[i].name,symbolTable.table[k].identifiers[i].type,symbolTable.table[k].identifiers[i].value.discriminator);
             if (symbolTable.table[k].identifiers[i].value.discriminator == 0){
               $3->type = DEC;
             }
@@ -333,36 +336,6 @@ Exp: Val op Exp {
         printf("ERROR - Variable use before declaration - %s Line No - %d\n",$3->value.value.string,yylineno);
         error_count++;
     }
-    // if ($1->type == DEC && $3->type == FLT){
-    //     //change type of $1 to float
-    //     $1->type = FLT;
-    //     //write changes to ST
-    //     for (int k = scope; k >= 0; k--){
-    //       for (int i = 0; i < symbolTable.table[k].count;i++){
-    //         if (strcmp(symbolTable.table[k].identifiers[i].name,$1->value.value.string)==0){
-    //             strcpy(symbolTable.table[k].identifiers[i].type,"FLOAT");
-    //             symbolTable.table[k].identifiers[i].value.discriminator = 1;
-    //         }
-    //       }
-    //     }
-    //     $$->type = FLT;
-    //     set = 1;
-    // }
-    // if ($1->type == FLT && $3->type == DEC){
-    //     //change type of $3 to float
-    //     $3->type = FLT;
-    //     //write changes to ST
-    //     for (int k = scope; k >= 0; k--){
-    //       for (int i = 0; i < symbolTable.table[k].count;i++){
-    //         if (strcmp(symbolTable.table[k].identifiers[i].name,$3->value.value.string)==0){
-    //             strcpy(symbolTable.table[k].identifiers[i].type,"FLOAT");
-    //             symbolTable.table[k].identifiers[i].value.discriminator = 1;
-    //         }
-    //       }
-    //     }
-    //     $$->type = FLT;
-    //     set = 1;
-    // }
     if ($1->type == DEC && $3->type == FLT){
         $$->type = FLT;set = 1;
     }
@@ -385,17 +358,17 @@ Exp: Val op Exp {
   | OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS {$$ = $2;}
   | Val { $$ = $1;}
   ;
-id: IDENTIFIER {$$= get_new_node(yylval.str,0,NULL,ID);}
+id: IDENTIFIER {$$= get_new_node(yylval.str,0,NULL,ID);$$->core_type = ID;}
   ;
-Val: IDENTIFIER {$$ = get_new_node(yylval.str,0, NULL,ID);}
-  | STRING {$$ =get_new_node(yylval.str,0,NULL,STR);}
-  | DECIMAL {$$ = get_new_node(yylval.str,0,NULL,DEC);}
-  | FLOAT {$$ = get_new_node(yylval.str,0,NULL,FLT);}
-  | CHARACTER {$$ = get_new_node(yylval.str,0,NULL,CHAR);}
+Val: IDENTIFIER {$$ = get_new_node(yylval.str,0, NULL,ID);$$->core_type = ID;}
+  | STRING {$$ =get_new_node(yylval.str,0,NULL,STR);$$->core_type = VAL;}
+  | DECIMAL {$$ = get_new_node(yylval.str,0,NULL,DEC);$$->core_type = VAL;}
+  | FLOAT {$$ = get_new_node(yylval.str,0,NULL,FLT);$$->core_type = VAL;}
+  | CHARACTER {$$ = get_new_node(yylval.str,0,NULL,CHAR);$$->core_type = VAL;}
   ;
-op: ARITH {$$ = get_new_node(yylval.str,0, NULL,NUM);}
-  | BITWISE {$$ = get_new_node(yylval.str,0, NULL, NUM);}
-  | RELATIONAL {$$ = get_new_node(yylval.str,0, NULL,REL);}
+op: ARITH {$$ = get_new_node(yylval.str,0, NULL,NUM);$$->core_type = OP;}
+  | BITWISE {$$ = get_new_node(yylval.str,0, NULL, NUM);$$->core_type = OP;}
+  | RELATIONAL {$$ = get_new_node(yylval.str,0, NULL,REL);$$->core_type = OP;}
   ;
 Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
@@ -403,10 +376,13 @@ Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {
   assign_kids[0] = $2; assign_kids[1] = $4;
   kids[0]= get_new_node("LET",0,NULL,KW); kids[1]=get_new_node("=",2,assign_kids,KW); kids[2] = get_new_node(";",0,NULL,KW);
   $$ = get_new_node("VARDEC",3,kids,KW);
-  if ($4->type != VAL){
+  if ($4->core_type != VAL){
+        //printf("%s %s\n",CUSTYPES[$2->type],CUSTYPES[$4->type]);
         $2->type = $4->type;
+        
         //write changes to ST
         for (int p = 0; p < symbolTable.table[scope].count;p++){
+          //printf("TEST %s %s %d\n",$2->value.value.string,symbolTable.table[scope].identifiers[p].name,strcmp($2->value.value.string,symbolTable.table[scope].identifiers[p].name));
           if (strcmp($2->value.value.string,symbolTable.table[scope].identifiers[p].name) == 0){
                if ($2->type == DEC){
                     strcpy(symbolTable.table[scope].identifiers[p].type, "DECIMAL");
@@ -428,11 +404,13 @@ Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {
         }
   }else{
   int literal_assign = 0;
+  
   for (int j = 0; j < symbolTable.table[scope].count; j++){
     if (strcmp($2->value.value.string,symbolTable.table[scope].identifiers[j].name) == 0){
       for (int k = 0; k < symbolTable.literal_count;k++){
         if (symbolTable.literalTable[k].discriminator == 0){
           if(symbolTable.literalTable[k].value.integer == atoi($4->value.value.string)){
+            
             symbolTable.table[scope].identifiers[j].value.discriminator = 0;
             literal_assign = 1;
             $2->type = DEC;
