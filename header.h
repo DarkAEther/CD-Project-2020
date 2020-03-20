@@ -45,3 +45,4 @@ struct symtbl{
 extern struct symtbl symbolTable;
 extern int yylineno;
 
+enum TYPE {ID, STR, DEC, FLT, CHAR, BOOL, OP,KW,REL,NUM,VAL};

@@ -117,7 +117,7 @@ MAIN main
 {OPEN_PARANTHESIS} {return OPEN_PARANTHESIS;}
 {CLOSE_PARANTHESIS} {return CLOSE_PARANTHESIS;}
 {ASSIGN_OPS} {return ASSIGN_OPS;}
-{ASSIGN} {return ASSIGN;}
+{ASSIGN} {yylval.str = strdup(yytext);return ASSIGN;}
 {RELATIONAL} {yylval.str = strdup(yytext);return RELATIONAL;}
 {ARITH_OPERATOR} {yylval.str = strdup(yytext);return ARITH;}
 {BITWISE_OPERATOR} {yylval.str = strdup(yytext);return BITWISE;}
@@ -157,7 +157,7 @@ MAIN main
 [0-9]+[a-zA-Z]+ {yyerror(yytext);return ERROR;}
 {ARITH_OPERATOR}{2,} {yyerror(yytext);return ERROR;}
 {COMMA} {return COMMA;}
-#EOF {dispLit();dispST();return EOFI;}
+#EOF {dispST();return EOFI;}
 . {yyerror(yytext);}
 
 %%
