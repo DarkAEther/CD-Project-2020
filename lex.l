@@ -2,7 +2,7 @@
 %{
 #include <stdio.h>
 #include "header.h"
-#include "yacc.tab.h"
+#include "y.tab.h"
 #include <string.h>
 #include <stdlib.h>
 void comment();

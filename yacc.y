@@ -96,6 +96,187 @@ void display_AST_BFS(NODE* root){
   printf("\n");
 }
 
+struct list {
+  char* value;
+  int temp;
+  int flag;
+  struct list* left;
+  struct list* right;
+};
+
+int temp;
+struct list* head = NULL;
+struct list* tail = NULL;
+void push(struct list* root, char* c)
+{
+  //printf("PUSH ");
+  struct list* node = malloc(sizeof(struct list));
+  node->value = c;
+  node->left = NULL;
+  node->right = NULL;
+  if (head == NULL) {
+    head = node;
+    tail = head;
+  }
+  else {
+    head->left = node;
+    node->right = head;
+    head = node;
+  }
+}
+
+struct quad {
+  char* op;
+  char* arg1;
+  char* arg2;
+  char* result;
+  struct quad* next;
+};
+struct quad* quad_head = NULL;
+struct quad* quad_tail = NULL;
+
+void insert_quad(struct quad* quad_head, char* operator, char* argument1, char* argument2, char* res) {
+  struct quad* node = malloc(sizeof(struct quad));
+  //printf("Value to be inserted %s %s %s %s\n", operator, argument1, argument2, res);
+  node->op = operator;
+  node->arg1 = argument1;
+  node->arg2 = argument2;
+  node->result = res;
+  node->next = NULL;
+  if(quad_head == NULL) {
+    printf("If part in insertion\n");
+    quad_head = node;
+    quad_tail = quad_head;
+  }
+  else {
+    printf("Else part in insertion\n");
+    quad_head->next = node;
+    quad_head = node;
+  }
+  //printf("Inserted %s %s %s %s\n", quad_tail->op, quad_tail->arg1, quad_tail->arg2, quad_tail->result);
+}
+int t = 0;
+
+
+void inorder(NODE* current) {
+  if (current == NULL) {
+    return;
+  }
+  /* 
+  Inorder for everything
+  for (int i = 0; i < current->child_count; i++) {
+    inorder(current->children[i]);
+    push(head, current->children[i]->value.value.string);
+
+  }
+  printf("%s", current->value.value.string);
+  */
+
+
+// Inorder for only Expressions
+// Except for, if, while
+// Only assignment
+  if ((strcmp(current->value.value.string, "+") == 0) || (strcmp(current->value.value.string, "*") == 0) || (strcmp(current->value.value.string, "-") == 0)) {
+    temp += 1;
+    //printf("Parent %s f", current->value.value.string);
+    push(head, current->value.value.string);
+    if ((strcmp(current->children[1]->value.value.string, "+") == 0) || (strcmp(current->children[1]->value.value.string, "*") == 0) || (strcmp(current->children[1]->value.value.string, "==") == 0) || (strcmp(current->children[1]->value.value.string, "-") == 0)) {
+      push(head, current->children[0]->value.value.string);
+      inorder(current->children[1]);
+    }
+    else {
+      for (int i = 0;i < current->child_count;i++){
+        inorder(current->children[i]);
+        //printf(" %s ", current->children[i]->value.value.string);
+        push(head, current->children[i]->value.value.string);
+        //printf("Done ");
+      }
+    }
+  }
+  else if (strcmp(current->value.value.string, "=") == 0) {
+    temp += 1;
+    push(head, current->value.value.string);
+    if ((strcmp(current->children[1]->value.value.string, "+") == 0) || (strcmp(current->children[1]->value.value.string, "*") == 0) || (strcmp(current->children[1]->value.value.string, "==") == 0) || (strcmp(current->children[1]->value.value.string, "-") == 0)) {
+      push(head, current->children[0]->value.value.string);
+      inorder(current->children[1]);
+    }
+    else {
+      for (int i = 0;i < current->child_count;i++){
+        inorder(current->children[i]);
+        //printf(" %s ", current->children[i]->value.value.string);
+        push(head, current->children[i]->value.value.string);
+      }
+    }
+  }
+  else {
+    // I think for everything else we need to add the code here.
+    for (int i = 0;i < current->child_count;i++){
+      inorder(current->children[i]);
+    }
+  }
+}
+
+void display_icg(struct list* head) {
+  struct list* r = head;
+  int temp = 0;
+  //printf("\nHead\n");
+  struct list* current = head;
+  //printf("%s", r->value);
+  /*
+  while(r != NULL) {
+    printf("Check %s\n", r->value);
+    insert_quad(quad_head, r->value, NULL, NULL, NULL);
+    r = r->right;
+  }
+  */
+  while(r != NULL) {
+    //printf("Check %s\n", r->value);
+    if ((strcmp(r->value, "+") == 0) || (strcmp(r->value, "*") == 0) || (strcmp(r->value, "-") == 0)) {
+      //printf("Decent op\n");
+      //printf("Value %s", r->value);
+      //printf("Left Left Value %s", r->left->left->value);
+      //printf("Left Value %s", r->left->value);
+      if (r->left->left && (strcmp(r->left->left->value, "+") == 0) || (strcmp(r->left->left->value, "*") == 0) || (strcmp(r->left->left->value, "-") == 0)) {
+        //printf("Not Decent op\n");
+        printf("%s %s %d %d\n", r->value, r->left->value, t, t+1);
+        //insert_quad(quad_head, r->value, r->left->value, (char*)t, (char*)t+1);
+        t += 1;
+      }
+      else {
+        t += 1;
+        //printf("Decent Op but in else\n");      
+        printf("%s %s %s %d\n", r->value, r->left->left->value, r->left->value, t);
+        //insert_quad(quad_head, r->value, r->left->left->value, r->left->value, (char*)t);
+      }
+    }
+    else if (strcmp(r->value, "=") == 0) {
+      //printf("Only Equal");
+      if (r->left->left && (strcmp(r->left->left->value, "+") == 0) || (strcmp(r->left->left->value, "*") == 0) || (strcmp(r->left->left->value, "-") == 0)) {
+        //printf("Only Equal with the next op\n");
+        printf("%s %d   %s\n", r->value, t, r->left->value);
+        //insert_quad(quad_head, r->value, (char*)t, NULL, r->left->value);
+      }
+      else {
+        //printf("Correct Equal\n");
+        if (!r->left->left) {
+          printf("%s %s   %s\n", r->value, r->left->value, r->left->value);
+          //insert_quad(quad_head, r->value, r->left->left->value, NULL, r->left->value);
+        }
+      }
+    }
+    r = r->right;
+  }
+
+  printf("Printing\n");
+  //printf("%s", quad_head->op);
+  while(quad_tail != NULL) {
+    printf("%s %s %s %s", quad_tail->op, quad_tail->arg1, quad_tail->arg2, quad_tail->result);
+    //printf("%s", quad_tail->next->op);
+    quad_tail = quad_tail->next;
+  }
+  printf("\n");
+}
+
 %}
 %union {
   char *str;
@@ -179,7 +360,11 @@ Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOC
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*7);
   kids[0]= get_new_node("FN",0,NULL,KW); kids[1] = get_new_node("MAIN",0,NULL,KW); kids[2]=get_new_node("(",0,NULL,KW); kids[3] = get_new_node(")",0,NULL,KW); kids[5] = $6;kids[4] = get_new_node("{",0,NULL,KW); kids[6] = get_new_node("}",0,NULL,KW);
   $$ = get_new_node("MAIN",7,kids,KW);
-  display_AST_BFS($$);
+  //display_AST_BFS($$); 
+  //printf("\nINORDER_______________---------------------------------------\n");
+  inorder($$);
+  display_icg(head);
+  //ICG($$);
 }
   ;
 Blk: Code Blk {
