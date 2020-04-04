@@ -653,7 +653,7 @@ Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
 Body: STRING
   | STRING COMMA Val
   ;
-If: KW_IF Exp {lab1();} OPEN_BLOCK Blk CLOSE_BLOCK {lab2();} Else {
+If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else {
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
     kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $6;
     $$ = get_new_node("IF",5,kids,KW);
@@ -665,15 +665,14 @@ If: KW_IF Exp {lab1();} OPEN_BLOCK Blk CLOSE_BLOCK {lab2();} Else {
 }
   ;
 Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK {
-    lab3();
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
     kids[0]= get_new_node("{",0,NULL,KW); kids[1]=$3; kids[2] =get_new_node("}",0,NULL,KW);
     $$ = get_new_node("ELSE",3,kids,KW);
 }
   | {$$ = get_new_node("LAMBDA",0,NULL,KW);}
   ;
-While: KW_WHILE {while_lab1();} Exp {whilelab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
-    whilelab3();
+While: KW_WHILE {lab1();} Exp {lab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
+    lab3();
     // NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
     // kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $5;
     // $$ = get_new_node("WHILE",5,kids,KW);
@@ -683,37 +682,36 @@ While: KW_WHILE {while_lab1();} Exp {whilelab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
     // }
 }
   ;
-For: KW_FOR id KW_IN Val {push_value($3); codegen_assign(); for_lab1();} RANGE Val {for_lab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
-    for_lab3();
-    // NODE** kids = (NODE**)malloc(sizeof(NODE*)*6);
-    // NODE** range_kids = (NODE**)malloc(sizeof(NODE*)*2);
-    // range_kids[0] = $4; range_kids[1] = $6;
-    // kids[0]= $2; kids[1]=get_new_node("IN",0,NULL,KW);kids[2] = get_new_node("RANGE",2,range_kids,KW); 
-    // kids[3]=get_new_node("{",0,NULL,KW);kids[4] = $8;kids[5] = get_new_node("}",0,NULL,KW);
-    // $$ = get_new_node("FOR",6,kids,KW);
-    // //write changes to ST
+For: KW_FOR id KW_IN Val RANGE Val OPEN_BLOCK Blk CLOSE_BLOCK {
+   NODE** kids = (NODE**)malloc(sizeof(NODE*)*6);
+   NODE** range_kids = (NODE**)malloc(sizeof(NODE*)*2);
+    range_kids[0] = $4; range_kids[1] = $6;
+    kids[0]= $2; kids[1]=get_new_node("IN",0,NULL,KW);kids[2] = get_new_node("RANGE",2,range_kids,KW); 
+    kids[3]=get_new_node("{",0,NULL,KW);kids[4] = $8;kids[5] = get_new_node("}",0,NULL,KW);
+    $$ = get_new_node("FOR",6,kids,KW);
+    //write changes to ST
     
-    // $2->type = DEC;
-    // int found = 0;
-    // if ($4->type !=DEC || $6->type!=DEC){
-    //   printf("ERROR - Loop range must have DECIMALS given types %s and %s\n",CUSTYPES[$4->type],CUSTYPES[$6->type]);
-    //   error_count++;
-    // }
-    // //printf("%d\n",scope);fflush(stdout);
-    // for (int k = scope; k >= 0; k--){
-    //   for (int i = 0; i < symbolTable.table[k].count;i++){
-    //       //printf("%s %s\n",symbolTable.table[k].identifiers[i].name,$2->value.value.string);fflush(stdout);
-    //       if (strcmp(symbolTable.table[k].identifiers[i].name,$2->value.value.string)==0){
-    //           strcpy(symbolTable.table[k].identifiers[i].type,"DECIMAL");
-    //           symbolTable.table[k].identifiers[i].value.discriminator = 0;
-    //           found = 1;
-    //           break;
-    //       }
-    //     }
-    //     if (found == 1){
-    //         break;
-    //       }
-    // }
+    $2->type = DEC;
+    int found = 0;
+    if ($4->type !=DEC || $6->type!=DEC){
+      printf("ERROR - Loop range must have DECIMALS given types %s and %s\n",CUSTYPES[$4->type],CUSTYPES[$6->type]);
+      error_count++;
+    }
+    //printf("%d\n",scope);fflush(stdout);
+    for (int k = scope; k >= 0; k--){
+      for (int i = 0; i < symbolTable.table[k].count;i++){
+          //printf("%s %s\n",symbolTable.table[k].identifiers[i].name,$2->value.value.string);fflush(stdout);
+          if (strcmp(symbolTable.table[k].identifiers[i].name,$2->value.value.string)==0){
+              strcpy(symbolTable.table[k].identifiers[i].type,"DECIMAL");
+              symbolTable.table[k].identifiers[i].value.discriminator = 0;
+              found = 1;
+              break;
+          }
+        }
+        if (found == 1){
+            break;
+          }
+    }
 }
   ;
 %%
@@ -732,25 +730,31 @@ void yyerror(char *s){
 char st[100][20];
 int top = 0;
 char i_value[2] = "0";
+//strcpy(i_value, "0");
 char temp_value[2] = "t";
+//strcpy(temp_value, "t");
 int label[20];
 int lnum = 0;
 int ltop = 0;
-int start = 0;
-int for_start = 0;
+int start = 1;
 
 void push_value(char* value) {
+  //printf("PUSH\n");
   strcpy(st[++top], value);
+  //printf("Check %s\n", st[top]);
 }
 
 void codegen() {
-  printf("Generate Code\n");
+  //printf("Generate Code\n");
   strcpy(temp_value, "t");
   strcat(temp_value, i_value);
+  //printf("%s %s %s %s\n", st[top], st[top-1], st[top-2], st[top-3]);
   printf("%s = %s %s %s \n", temp_value, st[top-2], st[top-1], st[top]);
   top -= 3;
   push_value(temp_value);
+  //strcpy(st[top], temp_value);
   i_value[0]++;
+  //printf("Check at end of code gen %s\n", st[top]);
 }
 
 void code_umin() {
@@ -760,45 +764,48 @@ void code_umin() {
   printf("%s = -%s\n", temp_value, st[top]);
   top--;
   push_value(st[top]);
+  //strcpy(st[top], temp_value);
   i_value[0]++;
 }
 
 void codegen_assign() {
+  //printf("Code assign\n");
+  //printf("%s %s %s %s\n", st[top], st[top-1], st[top-2], st[top-3]);
   printf("%s = %s\n", st[top-2], st[top-1]);
   top -= 2;
 }
 
 void lab1() {
-  lnum++;
+  // printf("Lab1\n");
+  printf("While 1\n");
+  printf("L%d: \n", lnum++);
+  start = lnum;
+}
+
+void lab2() {
+  printf("While 2\n");
   strcpy(temp_value, "t");
   strcat(temp_value, i_value);
   printf("%s = not %s\n", temp_value, st[top]);
   printf("if %s goto L%d\n", temp_value, lnum);
   i_value[0]++;
-  label[++ltop] = lnum;
-}
-
-void lab2() {
-  int x;
-  lnum++;
-  x = label[ltop--];
-  printf("goto L%d\n", lnum);
-  printf("L%d: \n", x);
-  label[++ltop] = lnum;
 }
 
 void lab3() {
-  int y;
-  y = label[ltop--];
+  printf("While 3\n");
+  printf("goto L%d \n", start);
+  printf("L%d: \n", lnum);
 }
 
 
 void while_lab1() {
+  printf("While 1\n");
   printf("L%d: \n", lnum++);
-  start += lnum-1;
+  start = lnum;
 }
 
 void whilelab2() {
+  printf("While 2\n");
   strcpy(temp_value, "t");
   strcat(temp_value, i_value);
   printf("%s = not %s\n", temp_value, st[top]);
@@ -807,34 +814,7 @@ void whilelab2() {
 }
 
 void whilelab3() {
+  printf("While 3\n");
   printf("goto L%d \n", start);
-}
-
-char value[20];
-void for_lab1() {
-  printf("L%d: \n", lnum++);
-  strcpy(value, st[top]);
-  for_start += lnum-1;
-}
-
-void for_lab2() {
-  strcpy(temp_value, "t");
-  strcat(temp_value, i_value);
-  printf("%s = %s not < %s\n", temp_value, value, st[top]);
-  printf("if %s goto L%d\n", temp_value, lnum);
-  i_value[0]++;
-}
-
-void for_lab3() {
-  push_value(value);
-  push_value("+");
-  push_value("1");
-  codegen();
-  char res[20];
-  strcpy(res, st[top]);
-  push_value(value);
-  push_value(res);
-  push_value("=");
-  codegen_assign();
-  printf("goto L%d\n", for_start);
+  printf("L%d: \n", lnum);
 }
