@@ -179,7 +179,6 @@ Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOC
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*7);
   kids[0]= get_new_node("FN",0,NULL,KW); kids[1] = get_new_node("MAIN",0,NULL,KW); kids[2]=get_new_node("(",0,NULL,KW); kids[3] = get_new_node(")",0,NULL,KW); kids[5] = $6;kids[4] = get_new_node("{",0,NULL,KW); kids[6] = get_new_node("}",0,NULL,KW);
   $$ = get_new_node("MAIN",7,kids,KW);
-  display_AST_BFS($$); 
 }
   ;
 Blk: Code Blk {
@@ -201,7 +200,7 @@ Code: Eval {$$ = $1;}
   | Exp {$$ = $1;}
   | Var_dec {$$ = $1;}
   ;
-Eval: Val ASSIGN Exp STMT_TERMINATOR{
+Eval: Val ASSIGN Exp STMT_TERMINATOR{ push_value($2); codegen_assign();
   if ($1->type != ID){
     printf("ERROR - LHS must be an identifier. Given %s Line no. %d\n",CUSTYPES[$1->type],yylineno);
     error_count++;
@@ -253,6 +252,7 @@ Eval: Val ASSIGN Exp STMT_TERMINATOR{
 }
   ;
 Exp: Val op Exp {
+  codegen();
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*2);
   kids[0] = $1; kids[1] = $3; 
   $$ = mod_node($2,2,kids);
@@ -357,19 +357,19 @@ Exp: Val op Exp {
   | OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS {$$ = $2;}
   | Val { $$ = $1;}
   ;
-id: IDENTIFIER { $$= get_new_node(yylval.str,0,NULL,ID);$$->core_type = ID;}
+id: IDENTIFIER {push_value($1); $$= get_new_node(yylval.str,0,NULL,ID);$$->core_type = ID;}
   ;
-Val: IDENTIFIER { $$ = get_new_node(yylval.str,0, NULL,ID);$$->core_type = ID;}
-  | STRING { $$ =get_new_node(yylval.str,0,NULL,STR);$$->core_type = VAL;}
-  | DECIMAL { $$ = get_new_node(yylval.str,0,NULL,DEC);$$->core_type = VAL;}
-  | FLOAT { $$ = get_new_node(yylval.str,0,NULL,FLT);$$->core_type = VAL;}
-  | CHARACTER { $$ = get_new_node(yylval.str,0,NULL,CHAR);$$->core_type = VAL;}
+Val: IDENTIFIER {push_value($1); $$ = get_new_node(yylval.str,0, NULL,ID);$$->core_type = ID;}
+  | STRING {push_value($1); $$ =get_new_node(yylval.str,0,NULL,STR);$$->core_type = VAL;}
+  | DECIMAL {push_value($1); $$ = get_new_node(yylval.str,0,NULL,DEC);$$->core_type = VAL;}
+  | FLOAT {push_value($1); $$ = get_new_node(yylval.str,0,NULL,FLT);$$->core_type = VAL;}
+  | CHARACTER {push_value($1); $$ = get_new_node(yylval.str,0,NULL,CHAR);$$->core_type = VAL;}
   ;
-op: ARITH { $$ = get_new_node(yylval.str,0, NULL,NUM);$$->core_type = OP;}
-  | BITWISE { $$ = get_new_node(yylval.str,0, NULL, NUM);$$->core_type = OP;}
-  | RELATIONAL { $$ = get_new_node(yylval.str,0, NULL,REL);$$->core_type = OP;}
+op: ARITH {push_value($1); $$ = get_new_node(yylval.str,0, NULL,NUM);$$->core_type = OP;}
+  | BITWISE {push_value($1); $$ = get_new_node(yylval.str,0, NULL, NUM);$$->core_type = OP;}
+  | RELATIONAL {push_value($1); $$ = get_new_node(yylval.str,0, NULL,REL);$$->core_type = OP;}
   ;
-Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR { 
+Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR { push_value($3); codegen_assign();
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
   NODE** assign_kids = (NODE**)malloc(sizeof(NODE*)*2);
   assign_kids[0] = $2; assign_kids[1] = $4;
@@ -467,7 +467,7 @@ Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
 Body: STRING
   | STRING COMMA Val
   ;
-If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else {
+If: KW_IF Exp {lab1();} OPEN_BLOCK Blk CLOSE_BLOCK {lab2();} Else {
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
     kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $6;
     $$ = get_new_node("IF",5,kids,KW);
@@ -479,53 +479,56 @@ If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else {
 }
   ;
 Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK {
+    lab3();
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
     kids[0]= get_new_node("{",0,NULL,KW); kids[1]=$3; kids[2] =get_new_node("}",0,NULL,KW);
     $$ = get_new_node("ELSE",3,kids,KW);
 }
   | {$$ = get_new_node("LAMBDA",0,NULL,KW);}
   ;
-While: KW_WHILE Exp OPEN_BLOCK Blk CLOSE_BLOCK {
-      NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-      kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $5;
-      $$ = get_new_node("WHILE",5,kids,KW);
-      if ($2->type != BOOL){
-        error_count++;
-        printf("ERROR - Incorrect WHILE - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
-      }
+While: KW_WHILE {while_lab1();} Exp {whilelab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
+    whilelab3();
+    // NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
+    // kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $5;
+    // $$ = get_new_node("WHILE",5,kids,KW);
+    // if ($2->type != BOOL){
+    //     error_count++;
+    //     printf("ERROR - Incorrect WHILE - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
+    // }
 }
   ;
-For: KW_FOR id KW_IN Val RANGE Val OPEN_BLOCK Blk CLOSE_BLOCK {
-      NODE** kids = (NODE**)malloc(sizeof(NODE*)*6);
-      NODE** range_kids = (NODE**)malloc(sizeof(NODE*)*2);
-      range_kids[0] = $4; range_kids[1] = $6;
-      kids[0]= $2; kids[1]=get_new_node("IN",0,NULL,KW);kids[2] = get_new_node("RANGE",2,range_kids,KW); 
-      kids[3]=get_new_node("{",0,NULL,KW);kids[4] = $8;kids[5] = get_new_node("}",0,NULL,KW);
-      $$ = get_new_node("FOR",6,kids,KW);
-      //write changes to ST
-  
-      $2->type = DEC;
-      int found = 0;
-      if ($4->type !=DEC || $6->type!=DEC){
-        printf("ERROR - Loop range must have DECIMALS given types %s and %s\n",CUSTYPES[$4->type],CUSTYPES[$6->type]);
-        error_count++;
-      }
-      //printf("%d\n",scope);fflush(stdout);
-      for (int k = scope; k >= 0; k--){
-        for (int i = 0; i < symbolTable.table[k].count;i++){
-          printf("%s %s\n",symbolTable.table[k].identifiers[i].name,$2->value.value.string);fflush(stdout);
-          if (strcmp(symbolTable.table[k].identifiers[i].name,$2->value.value.string)==0){
-            strcpy(symbolTable.table[k].identifiers[i].type,"DECIMAL");
-            symbolTable.table[k].identifiers[i].value.discriminator = 0;
-            found = 1;
-            break;
-          }
-        }
-        if (found == 1){
-          break;
-        }
-      }
-    }
+For: KW_FOR id KW_IN Val {push_value($3); codegen_assign(); for_lab1();} RANGE Val {for_lab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
+    for_lab3();
+    // NODE** kids = (NODE**)malloc(sizeof(NODE*)*6);
+    // NODE** range_kids = (NODE**)malloc(sizeof(NODE*)*2);
+    // range_kids[0] = $4; range_kids[1] = $6;
+    // kids[0]= $2; kids[1]=get_new_node("IN",0,NULL,KW);kids[2] = get_new_node("RANGE",2,range_kids,KW); 
+    // kids[3]=get_new_node("{",0,NULL,KW);kids[4] = $8;kids[5] = get_new_node("}",0,NULL,KW);
+    // $$ = get_new_node("FOR",6,kids,KW);
+    // //write changes to ST
+    
+    // $2->type = DEC;
+    // int found = 0;
+    // if ($4->type !=DEC || $6->type!=DEC){
+    //   printf("ERROR - Loop range must have DECIMALS given types %s and %s\n",CUSTYPES[$4->type],CUSTYPES[$6->type]);
+    //   error_count++;
+    // }
+    // //printf("%d\n",scope);fflush(stdout);
+    // for (int k = scope; k >= 0; k--){
+    //   for (int i = 0; i < symbolTable.table[k].count;i++){
+    //       //printf("%s %s\n",symbolTable.table[k].identifiers[i].name,$2->value.value.string);fflush(stdout);
+    //       if (strcmp(symbolTable.table[k].identifiers[i].name,$2->value.value.string)==0){
+    //           strcpy(symbolTable.table[k].identifiers[i].type,"DECIMAL");
+    //           symbolTable.table[k].identifiers[i].value.discriminator = 0;
+    //           found = 1;
+    //           break;
+    //       }
+    //     }
+    //     if (found == 1){
+    //         break;
+    //       }
+    // }
+}
   ;
 %%
 
@@ -538,4 +541,118 @@ int main(){
 void yyerror(char *s){
 	printf("ERROR: \"%s\" on line: %d\n",s, yylineno);
   yyparse();
+}
+
+char st[100][20];
+int top = 0;
+char i_value[2] = "0";
+char temp_value[2] = "t";
+int label[20];
+int lnum = 0;
+int ltop = 0;
+int start = 0;
+int for_start = 0;
+
+void push_value(char* value) {
+  strcpy(st[++top], value);
+  printf("--------------------------%s\n", symbolTable.table[scope].identifiers[1].name);
+}
+
+void codegen() {
+  //printf("Generate Code\n");
+  strcpy(temp_value, "t");
+  strcat(temp_value, i_value);
+  printf("%s = %s %s %s \n", temp_value, st[top-2], st[top-1], st[top]);
+  top -= 3;
+  push_value(temp_value);
+  i_value[0]++;
+}
+
+void code_umin() {
+  printf("Code Unary\n");
+  strcpy(temp_value, "t");
+  strcat(temp_value, i_value);
+  printf("%s = -%s\n", temp_value, st[top]);
+  top--;
+  push_value(st[top]);
+  i_value[0]++;
+}
+
+void codegen_assign() {
+  printf("%s = %s\n", st[top-2], st[top-1]);
+  top -= 2;
+}
+
+void lab1() {
+  lnum++;
+  strcpy(temp_value, "t");
+  strcat(temp_value, i_value);
+  printf("%s = not %s\n", temp_value, st[top]);
+  printf("if %s goto L%d\n", temp_value, lnum);
+  i_value[0]++;
+  label[++ltop] = lnum;
+}
+
+void lab2() {
+  int x;
+  lnum++;
+  x = label[ltop--];
+  printf("goto L%d\n", lnum);
+  printf("L%d: \n", x);
+  label[++ltop] = lnum;
+}
+
+void lab3() {
+  int y;
+  y = label[ltop--];
+  printf("L%d: \n", y);
+}
+
+
+void while_lab1() {
+  printf("L%d: \n", lnum++);
+  start += lnum-1;
+}
+
+void whilelab2() {
+  strcpy(temp_value, "t");
+  strcat(temp_value, i_value);
+  printf("%s = not %s\n", temp_value, st[top]);
+  printf("if %s goto L%d\n", temp_value, lnum);
+  i_value[0]++;
+}
+
+void whilelab3() {
+  printf("goto L%d \n", start);
+  printf("L%d: \n", start+1);
+}
+
+char value[20];
+void for_lab1() {
+  printf("L%d: \n", lnum++);
+  strcpy(value, st[top]);
+  for_start += lnum-1;
+}
+
+void for_lab2() {
+  strcpy(temp_value, "t");
+  strcat(temp_value, i_value);
+  printf("%s = %s not < %s\n", temp_value, value, st[top]);
+  printf("if %s goto L%d\n", temp_value, lnum);
+  i_value[0]++;
+}
+
+void for_lab3() {
+  push_value(value);
+  push_value("+");
+  push_value("1");
+  codegen();
+  char res[20];
+  strcpy(res, st[top]);
+  push_value(value);
+  push_value(res);
+  push_value("=");
+  codegen_assign();
+  printf("goto L%d\n", for_start);
+  printf("L%d: \n", for_start + 1);
 }

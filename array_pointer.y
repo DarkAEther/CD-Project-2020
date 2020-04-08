@@ -8,6 +8,7 @@ void yyerror();
 int line_num=1;  
 int error_count = 0;  
 extern int scope;
+int quad_num = 0;
 
 char* CUSTYPES[] ={"ID\0","STRING\0","DECIMAL\0","FLOAT\0","CHARACTER\0","BOOLEAN\0","OP\0","KW\0"};
 typedef struct node{
@@ -96,187 +97,6 @@ void display_AST_BFS(NODE* root){
   printf("\n");
 }
 
-struct list {
-  char* value;
-  int temp;
-  int flag;
-  struct list* left;
-  struct list* right;
-};
-
-int temp;
-struct list* head = NULL;
-struct list* tail = NULL;
-void push(struct list* root, char* c)
-{
-  //printf("PUSH ");
-  struct list* node = malloc(sizeof(struct list));
-  node->value = c;
-  node->left = NULL;
-  node->right = NULL;
-  if (head == NULL) {
-    head = node;
-    tail = head;
-  }
-  else {
-    head->left = node;
-    node->right = head;
-    head = node;
-  }
-}
-
-struct quad {
-  char* op;
-  char* arg1;
-  char* arg2;
-  char* result;
-  struct quad* next;
-};
-struct quad* quad_head = NULL;
-struct quad* quad_tail = NULL;
-
-void insert_quad(struct quad* quad_head, char* operator, char* argument1, char* argument2, char* res) {
-  struct quad* node = malloc(sizeof(struct quad));
-  //printf("Value to be inserted %s %s %s %s\n", operator, argument1, argument2, res);
-  node->op = operator;
-  node->arg1 = argument1;
-  node->arg2 = argument2;
-  node->result = res;
-  node->next = NULL;
-  if(quad_head == NULL) {
-    printf("If part in insertion\n");
-    quad_head = node;
-    quad_tail = quad_head;
-  }
-  else {
-    printf("Else part in insertion\n");
-    quad_head->next = node;
-    quad_head = node;
-  }
-  //printf("Inserted %s %s %s %s\n", quad_tail->op, quad_tail->arg1, quad_tail->arg2, quad_tail->result);
-}
-int t = 0;
-
-
-void inorder(NODE* current) {
-  if (current == NULL) {
-    return;
-  }
-  /* 
-  Inorder for everything
-  for (int i = 0; i < current->child_count; i++) {
-    inorder(current->children[i]);
-    push(head, current->children[i]->value.value.string);
-
-  }
-  printf("%s", current->value.value.string);
-  */
-
-
-// Inorder for only Expressions
-// Except for, if, while
-// Only assignment
-  if ((strcmp(current->value.value.string, "+") == 0) || (strcmp(current->value.value.string, "*") == 0) || (strcmp(current->value.value.string, "-") == 0)) {
-    temp += 1;
-    //printf("Parent %s f", current->value.value.string);
-    push(head, current->value.value.string);
-    if ((strcmp(current->children[1]->value.value.string, "+") == 0) || (strcmp(current->children[1]->value.value.string, "*") == 0) || (strcmp(current->children[1]->value.value.string, "==") == 0) || (strcmp(current->children[1]->value.value.string, "-") == 0)) {
-      push(head, current->children[0]->value.value.string);
-      inorder(current->children[1]);
-    }
-    else {
-      for (int i = 0;i < current->child_count;i++){
-        inorder(current->children[i]);
-        //printf(" %s ", current->children[i]->value.value.string);
-        push(head, current->children[i]->value.value.string);
-        //printf("Done ");
-      }
-    }
-  }
-  else if (strcmp(current->value.value.string, "=") == 0) {
-    temp += 1;
-    push(head, current->value.value.string);
-    if ((strcmp(current->children[1]->value.value.string, "+") == 0) || (strcmp(current->children[1]->value.value.string, "*") == 0) || (strcmp(current->children[1]->value.value.string, "==") == 0) || (strcmp(current->children[1]->value.value.string, "-") == 0)) {
-      push(head, current->children[0]->value.value.string);
-      inorder(current->children[1]);
-    }
-    else {
-      for (int i = 0;i < current->child_count;i++){
-        inorder(current->children[i]);
-        //printf(" %s ", current->children[i]->value.value.string);
-        push(head, current->children[i]->value.value.string);
-      }
-    }
-  }
-  else {
-    // I think for everything else we need to add the code here.
-    for (int i = 0;i < current->child_count;i++){
-      inorder(current->children[i]);
-    }
-  }
-}
-
-void display_icg(struct list* head) {
-  struct list* r = head;
-  int temp = 0;
-  //printf("\nHead\n");
-  struct list* current = head;
-  //printf("%s", r->value);
-  /*
-  while(r != NULL) {
-    printf("Check %s\n", r->value);
-    insert_quad(quad_head, r->value, NULL, NULL, NULL);
-    r = r->right;
-  }
-  */
-  while(r != NULL) {
-    //printf("Check %s\n", r->value);
-    if ((strcmp(r->value, "+") == 0) || (strcmp(r->value, "*") == 0) || (strcmp(r->value, "-") == 0)) {
-      //printf("Decent op\n");
-      //printf("Value %s", r->value);
-      //printf("Left Left Value %s", r->left->left->value);
-      //printf("Left Value %s", r->left->value);
-      if (r->left->left && (strcmp(r->left->left->value, "+") == 0) || (strcmp(r->left->left->value, "*") == 0) || (strcmp(r->left->left->value, "-") == 0)) {
-        //printf("Not Decent op\n");
-        printf("%s %s %d %d\n", r->value, r->left->value, t, t+1);
-        //insert_quad(quad_head, r->value, r->left->value, (char*)t, (char*)t+1);
-        t += 1;
-      }
-      else {
-        t += 1;
-        //printf("Decent Op but in else\n");      
-        printf("%s %s %s %d\n", r->value, r->left->left->value, r->left->value, t);
-        //insert_quad(quad_head, r->value, r->left->left->value, r->left->value, (char*)t);
-      }
-    }
-    else if (strcmp(r->value, "=") == 0) {
-      //printf("Only Equal");
-      if (r->left->left && (strcmp(r->left->left->value, "+") == 0) || (strcmp(r->left->left->value, "*") == 0) || (strcmp(r->left->left->value, "-") == 0)) {
-        //printf("Only Equal with the next op\n");
-        printf("%s %d   %s\n", r->value, t, r->left->value);
-        //insert_quad(quad_head, r->value, (char*)t, NULL, r->left->value);
-      }
-      else {
-        //printf("Correct Equal\n");
-        if (!r->left->left) {
-          printf("%s %s   %s\n", r->value, r->left->value, r->left->value);
-          //insert_quad(quad_head, r->value, r->left->left->value, NULL, r->left->value);
-        }
-      }
-    }
-    r = r->right;
-  }
-
-  printf("Printing\n");
-  //printf("%s", quad_head->op);
-  while(quad_tail != NULL) {
-    printf("%s %s %s %s", quad_tail->op, quad_tail->arg1, quad_tail->arg2, quad_tail->result);
-    //printf("%s", quad_tail->next->op);
-    quad_tail = quad_tail->next;
-  }
-  printf("\n");
-}
-
 %}
 %union {
   char *str;
@@ -360,11 +180,6 @@ Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOC
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*7);
   kids[0]= get_new_node("FN",0,NULL,KW); kids[1] = get_new_node("MAIN",0,NULL,KW); kids[2]=get_new_node("(",0,NULL,KW); kids[3] = get_new_node(")",0,NULL,KW); kids[5] = $6;kids[4] = get_new_node("{",0,NULL,KW); kids[6] = get_new_node("}",0,NULL,KW);
   $$ = get_new_node("MAIN",7,kids,KW);
-  //display_AST_BFS($$); 
-  //printf("\nINORDER_______________---------------------------------------\n");
-  //inorder($$);
-  //display_icg(head);
-  //ICG($$);
 }
   ;
 Blk: Code Blk {
@@ -646,6 +461,7 @@ Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR { push_value($3); codegen_assign()
     }
   }
   }
+  
 }
   ;
 Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
@@ -653,73 +469,56 @@ Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
 Body: STRING
   | STRING COMMA Val
   ;
-If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else {
-    NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-    kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $6;
-    $$ = get_new_node("IF",5,kids,KW);
-    //printf("%s\n",CUSTYPES[$2->type]);
-    if ($2->type != BOOL){
-        error_count++;
-        printf("ERROR - Incorrect IF - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
-    }
+If: KW_IF Exp {lab1();} OPEN_BLOCK Blk CLOSE_BLOCK {lab2();} Else {
+    printf("Scope for IF %d\n", scope);
+    printf("Count %d\n", symbolTable.table[scope].count);
 }
   ;
 Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK {
-    NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
-    kids[0]= get_new_node("{",0,NULL,KW); kids[1]=$3; kids[2] =get_new_node("}",0,NULL,KW);
-    $$ = get_new_node("ELSE",3,kids,KW);
+    lab3();
+    printf("Scope for Else %d\n", scope);
+    printf("Count %d\n", symbolTable.table[scope].count);
 }
   | {$$ = get_new_node("LAMBDA",0,NULL,KW);}
   ;
-While: KW_WHILE {lab1();} Exp {lab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
-    lab3();
-    // NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-    // kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $5;
-    // $$ = get_new_node("WHILE",5,kids,KW);
-    // if ($2->type != BOOL){
-    //     error_count++;
-    //     printf("ERROR - Incorrect WHILE - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
-    // }
+While: KW_WHILE {while_lab1();} Exp {whilelab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
+    whilelab3();
+    printf("Scope for While %d\n", scope);
+    printf("Count %d\n", symbolTable.table[scope].count);
 }
   ;
-For: KW_FOR id KW_IN Val RANGE Val OPEN_BLOCK Blk CLOSE_BLOCK {
-   NODE** kids = (NODE**)malloc(sizeof(NODE*)*6);
-   NODE** range_kids = (NODE**)malloc(sizeof(NODE*)*2);
-    range_kids[0] = $4; range_kids[1] = $6;
-    kids[0]= $2; kids[1]=get_new_node("IN",0,NULL,KW);kids[2] = get_new_node("RANGE",2,range_kids,KW); 
-    kids[3]=get_new_node("{",0,NULL,KW);kids[4] = $8;kids[5] = get_new_node("}",0,NULL,KW);
-    $$ = get_new_node("FOR",6,kids,KW);
-    //write changes to ST
-    
-    $2->type = DEC;
-    int found = 0;
-    if ($4->type !=DEC || $6->type!=DEC){
-      printf("ERROR - Loop range must have DECIMALS given types %s and %s\n",CUSTYPES[$4->type],CUSTYPES[$6->type]);
-      error_count++;
-    }
-    //printf("%d\n",scope);fflush(stdout);
-    for (int k = scope; k >= 0; k--){
-      for (int i = 0; i < symbolTable.table[k].count;i++){
-          //printf("%s %s\n",symbolTable.table[k].identifiers[i].name,$2->value.value.string);fflush(stdout);
-          if (strcmp(symbolTable.table[k].identifiers[i].name,$2->value.value.string)==0){
-              strcpy(symbolTable.table[k].identifiers[i].type,"DECIMAL");
-              symbolTable.table[k].identifiers[i].value.discriminator = 0;
-              found = 1;
-              break;
-          }
-        }
-        if (found == 1){
-            break;
-          }
-    }
+For: KW_FOR id KW_IN Val {push_value($3); codegen_assign(); for_lab1();} RANGE Val {for_lab2();} OPEN_BLOCK Blk CLOSE_BLOCK {
+    for_lab3();
+    printf("Scope for FOR %d\n", scope);
+    printf("Count %d\n", symbolTable.table[scope].count);
 }
   ;
 %%
+
+union entry {
+  struct id* st_entry;
+  struct literal* lt_entry;
+};
+
+struct quad {
+  int discriminator1;
+  int discriminator2;
+  /*
+  0 : ST
+  1 : LT
+  */
+  char* op;
+  union entry arg1;
+  union entry arg2;
+  union entry result;
+};
+struct quad q[100];
 
 int main(){
         symbolTable.literal_count = 0;
         symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal));
         yyparse();
+        //display_quad(head_quad);
         return 0;
 }
 void yyerror(char *s){
@@ -730,91 +529,318 @@ void yyerror(char *s){
 char st[100][20];
 int top = 0;
 char i_value[2] = "0";
-//strcpy(i_value, "0");
 char temp_value[2] = "t";
-//strcpy(temp_value, "t");
 int label[20];
 int lnum = 0;
 int ltop = 0;
-int start = 1;
+int start = 0;
+int for_start = 0;
 
 void push_value(char* value) {
-  //printf("PUSH\n");
   strcpy(st[++top], value);
-  //printf("Check %s\n", st[top]);
 }
 
 void codegen() {
   //printf("Generate Code\n");
   strcpy(temp_value, "t");
   strcat(temp_value, i_value);
-  //printf("%s %s %s %s\n", st[top], st[top-1], st[top-2], st[top-3]);
+  int x=symbolTable.table[scope].count;
+    strcpy(symbolTable.table[scope].identifiers[x].name, temp_value);
+    symbolTable.table[scope].identifiers[x].lineno=0;
+    symbolTable.table[scope].count++;
+
+  struct quad* node = malloc(sizeof(struct quad));
+
+  int j = 0;
+  while (j < symbolTable.table[scope].count) {
+    printf("Values : %s\n", symbolTable.table[scope].identifiers[j].name);
+    j++;
+  }
+  int i = 0;
+  strcpy(q[quad_num].op, "!");
+  q[quad_num].result.st_entry = &symbolTable.table[scope].identifiers[x];
+  
+  while(i < symbolTable.literal_count) {
+    if (symbolTable.literalTable[i].discriminator == 0) {
+      printf("Int %d\n", atoi(st[top-2]));
+      if(symbolTable.literalTable[i].value.integer == atoi(st[top-2])) {
+        q[quad_num].discriminator1 = 1;
+        q[quad_num].arg1.lt_entry = &symbolTable.literalTable[i];
+        printf("Lit Check Value %d\n", symbolTable.literalTable[i].value.integer);
+      }
+        else if(symbolTable.literalTable[i].value.integer == atoi(st[top])) {
+            q[quad_num].discriminator2 = 1;
+            q[quad_num].arg2.lt_entry = &symbolTable.literalTable[i];
+            printf("Lit Check Value %d\n", symbolTable.literalTable[i].value.integer);
+        }
+    }
+    // else if (symbolTable.literalTable[i].discriminator == 1) {
+    //   printf("Lit Check Value %f\n", symbolTable.literalTable[i].value.floating);
+    //   if(symbolTable.literalTable[i].value.floating == (double)st[top-2]) {
+    //     node->discriminator1 = 1;
+    //     node->arg1.lt_entry = &symbolTable.literalTable[i];
+    //   }
+    // }
+//     else if (symbolTable.literalTable[i].discriminator == 2) {
+//         printf(" Char %c\n", st[top-2]);
+//       if(strcmp(symbolTable.literalTable[i].value.character, st[top-2])==0) {
+//         node->discriminator1 = 1;
+//         node->arg1.lt_entry = &symbolTable.literalTable[i];
+//         printf("Lit Check Value %c\n", symbolTable.literalTable[i].value.character);
+//       }
+//     }
+//     else if (symbolTable.literalTable[i].discriminator == 3) {
+//       printf("Str %s\n", st[top-2]);
+//       if(strcmp(symbolTable.literalTable[i].value.string, st[top-2])==0) {
+//         node->discriminator1 = 1;
+//         node->arg1.lt_entry = &symbolTable.literalTable[i];
+//         printf("Lit Check Value %s\n", symbolTable.literalTable[i].value.string);
+//       }
+//     }
+    printf("Lit Values : %s %d\n", symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
+    i++;
+  }
+  quad_num++;
   printf("%s = %s %s %s \n", temp_value, st[top-2], st[top-1], st[top]);
+
   top -= 3;
   push_value(temp_value);
-  //strcpy(st[top], temp_value);
-  i_value[0]++;
-  //printf("Check at end of code gen %s\n", st[top]);
-}
-
-void code_umin() {
-  printf("Code Unary\n");
-  strcpy(temp_value, "t");
-  strcat(temp_value, i_value);
-  printf("%s = -%s\n", temp_value, st[top]);
-  top--;
-  push_value(st[top]);
-  //strcpy(st[top], temp_value);
   i_value[0]++;
 }
 
 void codegen_assign() {
-  //printf("Code assign\n");
-  //printf("%s %s %s %s\n", st[top], st[top-1], st[top-2], st[top-3]);
   printf("%s = %s\n", st[top-2], st[top-1]);
   top -= 2;
 }
 
 void lab1() {
-  // printf("Lab1\n");
-  printf("While 1\n");
-  printf("L%d: \n", lnum++);
-  start = lnum;
-}
-
-void lab2() {
-  printf("While 2\n");
+  lnum++;
   strcpy(temp_value, "t");
   strcat(temp_value, i_value);
+  int x=symbolTable.table[scope].count;
+    strcpy(symbolTable.table[scope].identifiers[x].name, temp_value);
+    symbolTable.table[scope].identifiers[x].lineno=0;
+    symbolTable.table[scope].count++;
+
+    int j = 0;
+  while (j < symbolTable.table[scope].count) {
+    printf("Values : %s\n", symbolTable.table[scope].identifiers[j].name);
+    j++;
+  }
+
+  strcpy(q[quad_num].op, "!");
+  q[quad_num].result.st_entry = &symbolTable.table[scope].identifiers[x];
+  int i = 0;
+  while(i < symbolTable.literal_count) {
+    if (symbolTable.literalTable[i].discriminator == 0) {
+    printf("Int %d\n", atoi(st[top-2]));
+      if(symbolTable.literalTable[i].value.integer == atoi(st[top])) {
+        q[quad_num].discriminator1 = 1;
+        q[quad_num].arg1.lt_entry = &symbolTable.literalTable[i];
+        printf("Lit Check Value %d\n", symbolTable.literalTable[i].value.integer);
+      }
+      q[quad_num].discriminator2 = 0;
+      q[quad_num].arg2.st_entry = NULL;
+    }
+    // else if (symbolTable.literalTable[i].discriminator == 1) {
+    //   printf("Lit Check Value %f\n", symbolTable.literalTable[i].value.floating);
+    //   if(symbolTable.literalTable[i].value.floating == (double)st[top-2]) {
+    //     node->discriminator1 = 1;
+    //     node->arg1.lt_entry = &symbolTable.literalTable[i];
+    //   }
+    // }
+//     else if (symbolTable.literalTable[i].discriminator == 2) {
+//         printf("Char %c\n", st[top-2]);
+//       if(strcmp(symbolTable.literalTable[i].value.character, st[top])==0) {
+//         node->discriminator1 = 1;
+//         node->arg1.lt_entry = &symbolTable.literalTable[i];
+//         printf("Lit Check Value %c\n", symbolTable.literalTable[i].value.character);
+//       }
+//     }
+//     else if (symbolTable.literalTable[i].discriminator == 3) {
+//         printf("Str %s\n", st[top-2]);
+//       if(strcmp(symbolTable.literalTable[i].value.string, st[top])==0) {
+//         node->discriminator1 = 1;
+//         node->arg1.lt_entry = &symbolTable.literalTable[i];
+//         printf("Lit Check Value %s\n", symbolTable.literalTable[i].value.string);
+//       }
+//     }
+    printf("Lit Values : %s %d\n", symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
+    i++;
+  }
+  quad_num++;
+  //insert_quad(head_quad, &node);
   printf("%s = not %s\n", temp_value, st[top]);
   printf("if %s goto L%d\n", temp_value, lnum);
   i_value[0]++;
+  label[++ltop] = lnum;
+}
+
+void lab2() {
+  int x;
+  lnum++;
+  x = label[ltop--];
+  printf("goto L%d\n", lnum);
+  printf("L%d: \n", x);
+  label[++ltop] = lnum;
 }
 
 void lab3() {
-  printf("While 3\n");
-  printf("goto L%d \n", start);
-  printf("L%d: \n", lnum);
+  int y;
+  y = label[ltop--];
+  printf("L%d: \n", y);
 }
 
 
 void while_lab1() {
-  printf("While 1\n");
   printf("L%d: \n", lnum++);
-  start = lnum;
+  start += lnum-1;
 }
 
 void whilelab2() {
-  printf("While 2\n");
   strcpy(temp_value, "t");
   strcat(temp_value, i_value);
+  int x=symbolTable.table[scope].count;
+    strcpy(symbolTable.table[scope].identifiers[x].name, temp_value);
+    symbolTable.table[scope].identifiers[x].lineno=0;
+    symbolTable.table[scope].count++;
+
+    int j = 0;
+  while (j < symbolTable.table[scope].count) {
+    printf("Values : %s\n", symbolTable.table[scope].identifiers[j].name);
+    j++;
+  }
+
+  int i = 0;
+  strcpy(q[quad_num].op, "!");
+  q[quad_num].result.st_entry = &symbolTable.table[scope].identifiers[x];
+  while(i < symbolTable.literal_count) {
+    if (symbolTable.literalTable[i].discriminator == 0) {
+      if(symbolTable.literalTable[i].value.integer == atoi(st[top])) {
+        printf("Int %d\n", atoi(st[top-2]));
+        q[quad_num].discriminator1 = 1;
+        q[quad_num].arg1.lt_entry = &symbolTable.literalTable[i];
+        printf("Lit Check Value %d\n", symbolTable.literalTable[i].value.integer);
+      }
+      q[quad_num].discriminator2 = 0;
+      q[quad_num].arg2.st_entry = NULL;
+    }
+    // else if (symbolTable.literalTable[i].discriminator == 1) {
+    //   printf("Lit Check Value %f\n", symbolTable.literalTable[i].value.floating);
+    //   if(symbolTable.literalTable[i].value.floating == (double)st[top-2]) {
+    //     node->discriminator1 = 1;
+    //     node->arg1.lt_entry = &symbolTable.literalTable[i];
+    //   }
+    // }
+//     else if (symbolTable.literalTable[i].discriminator == 2) {
+//         printf("Char %c\n", st[top-2]);
+//       if(strcmp(symbolTable.literalTable[i].value.character, st[top])==0) {
+//         node->discriminator1 = 1;
+//         node->arg1.lt_entry = &symbolTable.literalTable[i];
+//         printf("Lit Check Value %c\n", symbolTable.literalTable[i].value.character);
+//       }
+//     }
+//     else if (symbolTable.literalTable[i].discriminator == 3) {
+//         printf("Str %s\n", st[top-2]);
+//       if(strcmp(symbolTable.literalTable[i].value.string, st[top])==0) {
+//         node->discriminator1 = 1;
+//         node->arg1.lt_entry = &symbolTable.literalTable[i];
+//         printf("Lit Check Value %s\n", symbolTable.literalTable[i].value.string);
+//       }
+//     }
+    printf("Lit Values : %s %d\n", symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);
+    i++;
+  }
+  quad_num++;
+  //insert_quad(head_quad, node);
   printf("%s = not %s\n", temp_value, st[top]);
   printf("if %s goto L%d\n", temp_value, lnum);
   i_value[0]++;
 }
 
 void whilelab3() {
-  printf("While 3\n");
   printf("goto L%d \n", start);
-  printf("L%d: \n", lnum);
+  printf("L%d: \n", start+1);
+}
+
+char value[20];
+void for_lab1() {
+  printf("L%d: \n", lnum++);
+  strcpy(value, st[top]);
+  for_start += lnum-1;
+}
+
+void for_lab2() {
+  strcpy(temp_value, "t");
+  strcat(temp_value, i_value);
+  int x=symbolTable.table[scope].count;
+    strcpy(symbolTable.table[scope].identifiers[x].name, temp_value);
+    symbolTable.table[scope].identifiers[x].lineno=0;
+    symbolTable.table[scope].count++;
+
+    int j = 0;
+  while (j < symbolTable.table[scope].count) {
+    printf("Values : %s\n", symbolTable.table[scope].identifiers[j].name);
+    j++;
+  }
+
+  strcpy(q[quad_num].op, "!");
+  q[quad_num].result.st_entry = &symbolTable.table[scope].identifiers[x];
+  int i = 0;
+  while(i < symbolTable.literal_count) {
+    
+    if (symbolTable.literalTable[i].discriminator == 0) {
+        printf("Int %d\n", atoi(st[top-2]));
+      if(symbolTable.literalTable[i].value.integer == atoi(st[top])) {
+        q[quad_num].discriminator1 = 1;
+        q[quad_num].arg1.lt_entry = &symbolTable.literalTable[i];
+        printf("Lit Check Value %d\n", symbolTable.literalTable[i].value.integer);
+      }
+    }
+    // else if (symbolTable.literalTable[i].discriminator == 1) {
+    //   printf("Lit Check Value %f\n", symbolTable.literalTable[i].value.floating);
+    //   if(symbolTable.literalTable[i].value.floating == (double)st[top-2]) {
+    //     node->discriminator1 = 1;
+    //     node->arg1.lt_entry = &symbolTable.literalTable[i];
+    //   }
+    // }
+    else if (symbolTable.literalTable[i].discriminator == 2) {
+        printf("Char %c\n", st[top-2]);
+      if(strcmp(symbolTable.literalTable[i].value.character, st[top])==0) {
+        q[quad_num].discriminator1 = 1;
+        q[quad_num].arg1.lt_entry = &symbolTable.literalTable[i];
+      printf("Lit Check Value %c\n", symbolTable.literalTable[i].value.character);
+      }
+    }
+    else if (symbolTable.literalTable[i].discriminator == 3) {
+        printf("Str %s\n", st[top-2]);
+      if(strcmp(symbolTable.literalTable[i].value.string, st[top])==0) {
+        q[quad_num].discriminator1 = 1;
+        q[quad_num].arg1.lt_entry = &symbolTable.literalTable[i];
+        printf("Lit Check Value %s\n", symbolTable.literalTable[i].value.string);
+      }
+    }
+    printf("Lit Values : %s %d\n", symbolTable.literalTable[i].type, symbolTable.literalTable[i].discriminator);
+    i++;
+  }
+  quad_num++;
+  //insert_quad(head_quad, node);
+  printf("%s = %s not < %s\n", temp_value, value, st[top]);
+  printf("if %s goto L%d\n", temp_value, lnum);
+  i_value[0]++;
+}
+
+void for_lab3() {
+  push_value(value);
+  push_value("+");
+  push_value("1");
+  codegen();
+  char res[20];
+  strcpy(res, st[top]);
+  push_value(value);
+  push_value(res);
+  push_value("=");
+  codegen_assign();
+  printf("goto L%d\n", for_start);
+  printf("L%d: \n", for_start + 1);
 }
