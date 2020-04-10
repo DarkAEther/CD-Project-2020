@@ -1,26 +1,24 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include "header.h"
-#include "./lib/queue.h"
-#include "./lib/lookup.h"
-#include "./lib/quadruple.h"
-#include "./lib/symtab_util.h"
+#include "header.h" 
 #include <string.h>
 #include <assert.h>
 void yyerror();
 int line_num=1;  
 int error_count = 0;  
 extern int scope;
-NODE* st[100];
-QUEUE queue;
-int top;
-int temp_count;
-int label_count;
-QUAD* head_quad;
 
-char * temp_value;
 char* CUSTYPES[] ={"ID\0","STRING\0","DECIMAL\0","FLOAT\0","CHARACTER\0","BOOLEAN\0","OP\0","KW\0"};
+typedef struct node{
+  struct node** children;
+  int child_count;
+  struct value_wrap value;
+  int level;
+  enum TYPE type;
+  enum TYPE core_type;
+} NODE;
+
 
 NODE* get_new_node(char* token,int child_nodes,NODE** children,enum TYPE type){
   NODE* newnode = (NODE*)malloc(sizeof(NODE));
@@ -37,25 +35,62 @@ NODE* mod_node(NODE* original,int child_nodes,NODE** children){
   original->children = children;
   return original;
 }
+NODE** queue = NULL;
+int queue_front = -1;
+int queue_rear = -1;
+void enqueue(NODE* item){
+  if (queue == NULL){
+    queue = (NODE**)malloc(100*sizeof(NODE*));
+    queue_front = 0;
+  }
+  queue_rear++;
+  //printf("QUEUE REAR %d\n",queue_rear);
+  queue[queue_rear] = item;
+  //printf("%s\n",queue[queue_rear]->value.value.string);fflush(stdout);
+}
+NODE* dequeue(){
+  if (queue_front != -1 && queue_front <= queue_rear){
+    //not empty
+    //printf("%d\n",queue_rear);
+    NODE* temp = queue[queue_front];
+    queue_front++;
+    //printf("DQ 1\n");fflush(stdout);
+    if (queue_front > queue_rear){
+      //empty
+      free(queue);
+      queue = NULL;
+      queue_front = -1;
+      queue_rear = -1;
+    }
+    return temp;
+  }else{
+    return NULL;
+  }
+}
 
 void display_AST_BFS(NODE* root){
   if (error_count > 0){
     printf("Semantic Errors, Cannot build parse tree\n");
     return;
   }
-  enqueue(&queue,root);
+  enqueue(root);
+  //printf("CAME HERE\n");fflush(stdout);
   NODE* current;int currlvl = 0;
-  while (queue.queue_front!= -1){
-    current = dequeue(&queue);
+  while (queue_front!= -1){
+    current = dequeue();
     assert (current !=NULL);
     if (currlvl != current->level){
       printf("\n");
       currlvl = current->level;
     }
+    //printf("CAME HERE TWO\n");fflush(stdout);
+   
     printf(" %s ",current->value.value.string);fflush(stdout);
+    //printf("Child count %d\n",current->child_count);fflush(stdout);
     for (int i = 0;i < current->child_count;i++){
+      //printf("I->%d\n",i);fflush(stdout);
       current->children[i]->level = currlvl+1;
-      enqueue(&queue,current->children[i]);
+      enqueue(current->children[i]);
     }
   }
   printf("\n");
@@ -131,7 +166,7 @@ void display_AST_BFS(NODE* root){
 %token <node> KW_PRINTLN
 %token <node> EOFI
 
-%type <node> Main Blk Code Eval Exp id Val op Var_dec equals
+%type <node> Main Blk Code Eval Exp id Val op Var_dec
 %type <node> Out Body If Else For While
 %%
 start: Main EOFI {printf("\n-------------DONE----------------\n"); }
@@ -144,7 +179,7 @@ Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOC
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*7);
   kids[0]= get_new_node("FN",0,NULL,KW); kids[1] = get_new_node("MAIN",0,NULL,KW); kids[2]=get_new_node("(",0,NULL,KW); kids[3] = get_new_node(")",0,NULL,KW); kids[5] = $6;kids[4] = get_new_node("{",0,NULL,KW); kids[6] = get_new_node("}",0,NULL,KW);
   $$ = get_new_node("MAIN",7,kids,KW);
-  display_quad(head_quad);
+  display_AST_BFS($$);
 }
   ;
 Blk: Code Blk {
@@ -157,7 +192,7 @@ Blk: Code Blk {
   kids[0]= $1; kids[1] = $2; 
   $$ = get_new_node("BLK",2,kids,KW);
 }
-  | While Blk { $$ = $1;}
+  | While Blk {$$ = $1;}
   | For Blk {$$ = $1;}
   | {$$ = get_new_node("LAMBDA",0,NULL,KW);}
   ;
@@ -166,7 +201,7 @@ Code: Eval {$$ = $1;}
   | Exp {$$ = $1;}
   | Var_dec {$$ = $1;}
   ;
-Eval: Val equals Exp STMT_TERMINATOR{
+Eval: Val ASSIGN Exp STMT_TERMINATOR{
   if ($1->type != ID){
     printf("ERROR - LHS must be an identifier. Given %s Line no. %d\n",CUSTYPES[$1->type],yylineno);
     error_count++;
@@ -178,45 +213,47 @@ Eval: Val equals Exp STMT_TERMINATOR{
     kids[0] = get_new_node("ASSIGN",2,assign_kids,KW); kids[1] = get_new_node(";",0,NULL,KW);
     $$ = get_new_node("ASSIGNMENT",2,kids,KW);
     //Write changes to ST
-    struct id* record = lookup_ST(&symbolTable,$1->value.value.string,scope);
-    if (record != NULL){
-        if (strcmp(record->type,"") != 0){
+    int found = 0;
+    for (int k = scope; k >= 0; k--){
+        for(int i = 0; i < symbolTable.table[k].count;i++){
+          if (strcmp(symbolTable.table[k].identifiers[i].name,$1->value.value.string)==0){
+            if (strcmp(symbolTable.table[k].identifiers[i].type,"") != 0){
                 //variable is declared
-                strcpy(record->type,CUSTYPES[$3->type]);
+                strcpy(symbolTable.table[k].identifiers[i].type,CUSTYPES[$3->type]);
+                found = 1;
                 if ($3->type == DEC){
                   $1->type = DEC;
-                  record->value.discriminator = 0;
+                  symbolTable.table[k].identifiers[i].value.discriminator = 0;
                 }
                 if ($3->type == FLT){
                   $1->type = FLT;
-                  record->value.discriminator = 1;
+                  symbolTable.table[k].identifiers[i].value.discriminator = 1;
                 }
                 if ($3->type == CHAR){
                   $1->type = CHAR;
-                  record->value.discriminator = 3;
+                  symbolTable.table[k].identifiers[i].value.discriminator = 3;
                 }
                 if ($3->type == STR){
                   $1->type = STR;
-                  record->value.discriminator = 4;
+                  symbolTable.table[k].identifiers[i].value.discriminator = 4;
                 }
-                $1->PTR.st_ptr = record;
+                break;
+            }
           }
-          
-    }else{
+       }
+       if (found == 1){
+         break;
+       }
+    }
+    if (found == 0){
       printf("ERROR - Variable use before declaration %s on line %d\n",$1->value.value.string,yylineno);
       error_count++;
-    } 
-  }
-  if ($3->core_type == VAL){
-    struct literal* assigned = lookup_LT(&symbolTable,$3->value.value.string);
-    if (assigned != NULL){
-      $3->PTR.lt_ptr = assigned;
     }
   }
-  codegen_assign(scope,st,&top,&head_quad);
 }
   ;
 Exp: Val op Exp {
+  
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*2);
   kids[0] = $1; kids[1] = $3; 
   $$ = mod_node($2,2,kids);
@@ -224,61 +261,69 @@ Exp: Val op Exp {
       $$->type = BOOL;
   }
   if ($1->type == ID){
-    struct id* record = lookup_ST(&symbolTable,$1->value.value.string,scope);
-    if (record != NULL){
-      if (strcmp(record->type,"") != 0){
+      int found = 0;
+      
+    for (int k = scope; k >=0 && found == 0; k--){
+    for(int i = 0; i < symbolTable.table[k].count;i++){
+      //printf("TEST %s %s %d\n",symbolTable.table[k].identifiers[i].name,$1->value.value.string,strcmp(symbolTable.table[k].identifiers[i].name,($1)->value.value.string));
+      if (strcmp(symbolTable.table[k].identifiers[i].name,$1->value.value.string)==0){
+        // The variable has been found
+        //printf("D1#%s# #%s# %d\n",symbolTable.table[k].identifiers[i].type,"",strcmp(symbolTable.table[k].identifiers[i].type,""));
+        if (strcmp(symbolTable.table[k].identifiers[i].type,"") != 0){
             //declared var
-            if (record->value.discriminator == 0){
+            //printf("I am here\n");
+            found = 1;
+            if (symbolTable.table[k].identifiers[i].value.discriminator == 0){
               $1->type = DEC;
             }
-            if (record->value.discriminator == 1){
+            if (symbolTable.table[k].identifiers[i].value.discriminator == 1){
               $1->type = FLT;
             }
-            if (record->value.discriminator == 2){
+            if (symbolTable.table[k].identifiers[i].value.discriminator == 2){
               $1->type = CHAR;
             }
-            if (record->value.discriminator == 3){
+            if (symbolTable.table[k].identifiers[i].value.discriminator == 3){
               $1->type = STR;
             }
+            
+        }else{
+          //printf("variable %s is undeclared\n",$1->value.value.string);
+        }
+       break; 
       }
-       $1->PTR.st_ptr = record;
     }
-  }else{
-    //literal
-    struct literal * lit = lookup_LT(&symbolTable,$1->value.value.string);
-    if (lit!=NULL){
-      //literal found
-      printf("LITERAL 1 FOUND %d\n",lit->value.integer);
-      $1->PTR.lt_ptr = lit;
     }
   }
   if ($3->type == ID){
-    struct id* record = lookup_ST(&symbolTable,$3->value.value.string,scope);
-    if (record != NULL){
+      int found = 0;
+    for (int k = scope; k >=0 && found == 0; k--){
+    for(int i = 0; i < symbolTable.table[k].count;i++){
+      //printf("TEST %s %s %d\n",symbolTable.table[k].identifiers[i].name,$1->value.value.string,strcmp(symbolTable.table[k].identifiers[i].name,($1)->value.value.string));
+      if (strcmp(symbolTable.table[k].identifiers[i].name,($3)->value.value.string)==0){
         // The variable has been found
-        if (strcmp(record->type,"") != 0){
+        if (strcmp(symbolTable.table[k].identifiers[i].type,"") != 0){
             //declared var
-            if (record->value.discriminator == 0){
+            //printf("I am here\n");
+            found = 1;
+            //printf("###%s %s %d\n",symbolTable.table[k].identifiers[i].name,symbolTable.table[k].identifiers[i].type,symbolTable.table[k].identifiers[i].value.discriminator);
+            if (symbolTable.table[k].identifiers[i].value.discriminator == 0){
               $3->type = DEC;
             }
-            if (record->value.discriminator == 1){
+            if (symbolTable.table[k].identifiers[i].value.discriminator == 1){
               $3->type = FLT;
             }
-            if (record->value.discriminator == 2){
+            if (symbolTable.table[k].identifiers[i].value.discriminator == 2){
               $3->type = CHAR;
             }
-            if (record->value.discriminator == 3){
+            if (symbolTable.table[k].identifiers[i].value.discriminator == 3){
               $3->type = STR;
             }
+        }else{
+          //printf("variable %s is undeclared\n",$1->value.value.string);
         }
-        $3->PTR.st_ptr = record;
+        break;
       }
-  }else{
-    struct literal * lit = lookup_LT(&symbolTable,$3->value.value.string);
-    if (lit!=NULL){
-      //literal found
-      printf("LITERAL 3 FOUND %d\n",lit->value.integer);
-      $3->PTR.lt_ptr = lit;
+    }
     }
   }
   if ($2->type == NUM){
@@ -308,125 +353,114 @@ Exp: Val op Exp {
       printf("ERROR-  CANNOT PERFORM %s operation on %s and %s Line No- %d\n",$2->value.value.string, CUSTYPES[$1->type], CUSTYPES[$3->type], yylineno);
     }
   }
-  codegen(st,&top,&temp_count,yylineno,&head_quad,scope,&symbolTable);
+  
 }
   | OPEN_PARANTHESIS Exp CLOSE_PARANTHESIS {$$ = $2;}
   | Val { $$ = $1;}
   ;
-id: IDENTIFIER {$$= get_new_node(yylval.str,0,NULL,ID);$$->core_type = ID;push_value($$);$$->PTR.st_ptr = lookup_ST(&symbolTable,yylval.str,scope);}
+id: IDENTIFIER {$$= get_new_node(yylval.str,0,NULL,ID);$$->core_type = ID;}
   ;
-Val: IDENTIFIER {$$ = get_new_node(yylval.str,0, NULL,ID);$$->core_type = ID;push_value($$);$$->PTR.st_ptr = lookup_ST(&symbolTable,yylval.str,scope);}
-  | STRING {$$ =get_new_node(yylval.str,0,NULL,STR);$$->core_type = VAL;push_value($$);$$->PTR.lt_ptr = lookup_LT(&symbolTable,yylval.str);}
-  | DECIMAL {$$ = get_new_node(yylval.str,0,NULL,DEC);$$->core_type = VAL;push_value($$);$$->PTR.lt_ptr = lookup_LT(&symbolTable,yylval.str);}
-  | FLOAT {$$ = get_new_node(yylval.str,0,NULL,FLT);$$->core_type = VAL;push_value($$);$$->PTR.lt_ptr = lookup_LT(&symbolTable,yylval.str);}
-  | CHARACTER {$$ = get_new_node(yylval.str,0,NULL,CHAR);$$->core_type = VAL;push_value($$);$$->PTR.lt_ptr = lookup_LT(&symbolTable,yylval.str);}
+Val: IDENTIFIER {$$ = get_new_node(yylval.str,0, NULL,ID);$$->core_type = ID;}
+  | STRING {$$ =get_new_node(yylval.str,0,NULL,STR);$$->core_type = VAL;}
+  | DECIMAL {$$ = get_new_node(yylval.str,0,NULL,DEC);$$->core_type = VAL;}
+  | FLOAT {$$ = get_new_node(yylval.str,0,NULL,FLT);$$->core_type = VAL;}
+  | CHARACTER {$$ = get_new_node(yylval.str,0,NULL,CHAR);$$->core_type = VAL;}
   ;
-op: ARITH {$$ = get_new_node(yylval.str,0, NULL,NUM);$$->core_type = OP;push_value($$);}
-  | BITWISE {$$ = get_new_node(yylval.str,0, NULL, NUM);$$->core_type = OP;push_value($$);}
-  | RELATIONAL {$$ = get_new_node(yylval.str,0, NULL,REL);$$->core_type = OP;push_value($$);}
+op: ARITH {$$ = get_new_node(yylval.str,0, NULL,NUM);$$->core_type = OP;}
+  | BITWISE {$$ = get_new_node(yylval.str,0, NULL, NUM);$$->core_type = OP;}
+  | RELATIONAL {$$ = get_new_node(yylval.str,0, NULL,REL);$$->core_type = OP;}
   ;
-equals: ASSIGN {$$ = get_new_node(yylval.str,0, NULL,NUM);$$->core_type = OP;push_value($$);}
-  ;
-Var_dec: KW_LET id equals Exp STMT_TERMINATOR {
-  
+Var_dec: KW_LET id ASSIGN Exp STMT_TERMINATOR {
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
   NODE** assign_kids = (NODE**)malloc(sizeof(NODE*)*2);
   assign_kids[0] = $2; assign_kids[1] = $4;
   kids[0]= get_new_node("LET",0,NULL,KW); kids[1]=get_new_node("=",2,assign_kids,KW); kids[2] = get_new_node(";",0,NULL,KW);
   $$ = get_new_node("VARDEC",3,kids,KW);
-  
   if ($4->core_type != VAL){
+        //printf("%s %s\n",CUSTYPES[$2->type],CUSTYPES[$4->type]);
         $2->type = $4->type;
+        
         //write changes to ST
-        struct id * record = lookup_ST(&symbolTable,$2->value.value.string,scope);
-        if (record != NULL){
+        for (int p = 0; p < symbolTable.table[scope].count;p++){
+          //printf("TEST %s %s %d\n",$2->value.value.string,symbolTable.table[scope].identifiers[p].name,strcmp($2->value.value.string,symbolTable.table[scope].identifiers[p].name));
+          if (strcmp($2->value.value.string,symbolTable.table[scope].identifiers[p].name) == 0){
                if ($2->type == DEC){
-                    strcpy(record->type, "DECIMAL");
-                    record->value.discriminator = 0;
+                    strcpy(symbolTable.table[scope].identifiers[p].type, "DECIMAL");
+                    symbolTable.table[scope].identifiers[p].value.discriminator = 0;
                 }
                 if ($2->type == FLT){
-                    strcpy(record->type, "FLOAT");
-                    record-> value.discriminator = 1;
+                    strcpy(symbolTable.table[scope].identifiers[p].type, "FLOAT");
+                    symbolTable.table[scope].identifiers[p].value.discriminator = 1;
                 }
                 if ($2->type == CHAR){
-                  strcpy(record->type, "CHARACTER");
-                  record->value.discriminator = 2;
+                  strcpy(symbolTable.table[scope].identifiers[p].type, "CHARACTER");
+                  symbolTable.table[scope].identifiers[p].value.discriminator = 2;
                 }
                 if ($2->type == STR){
-                  strcpy(record->type, "STRING");
-                  record->value.discriminator = 3;
+                  strcpy(symbolTable.table[scope].identifiers[p].type, "STRING");
+                  symbolTable.table[scope].identifiers[p].value.discriminator = 3;
                 }
-               $2->PTR.st_ptr = record;
+          }
         }
   }else{
-    
   int literal_assign = 0;
-  struct literal * assigned = NULL;
-  struct id* record = lookup_ST(&symbolTable,$2->value.value.string,scope);
-  $2->PTR.st_ptr = record;
-  if (record != NULL){
-    printf("Record found\n");fflush(stdout);
+  
+  for (int j = 0; j < symbolTable.table[scope].count; j++){
+    if (strcmp($2->value.value.string,symbolTable.table[scope].identifiers[j].name) == 0){
       for (int k = 0; k < symbolTable.literal_count;k++){
         if (symbolTable.literalTable[k].discriminator == 0){
           if(symbolTable.literalTable[k].value.integer == atoi($4->value.value.string)){
-            record->value.discriminator = 0;
+            
+            symbolTable.table[scope].identifiers[j].value.discriminator = 0;
             literal_assign = 1;
-            assigned = symbolTable.literalTable +k;
             $2->type = DEC;
-            strcpy(record->type, symbolTable.literalTable[k].type);
-            record->value.value.integer= atoi($4->value.value.string);
+            strcpy(symbolTable.table[scope].identifiers[j].type, symbolTable.literalTable[k].type);
+            symbolTable.table[scope].identifiers[j].value.value.integer= atoi($4->value.value.string);
             break;
           }
         }else{
           if (symbolTable.literalTable[k].discriminator == 1){
             
             if(symbolTable.literalTable[k].value.floating == atof($4->value.value.string)){
-              record->value.discriminator = 1;
+              symbolTable.table[scope].identifiers[j].value.discriminator = 1;
               literal_assign = 1;
-              assigned = symbolTable.literalTable+k;
               $2->type = FLT;
-              strcpy(record->type, symbolTable.literalTable[k].type);
-              record->value.value.floating= atof($4->value.value.string);
+              strcpy(symbolTable.table[scope].identifiers[j].type, symbolTable.literalTable[k].type);
+              symbolTable.table[scope].identifiers[j].value.value.floating= atof($4->value.value.string);
               break;
             }
           }else{
             if (symbolTable.literalTable[k].discriminator == 2){
               if(strcmp(symbolTable.literalTable[k].value.character,$4->value.value.string)==0){
-                record->value.discriminator = 2;
+                symbolTable.table[scope].identifiers[j].value.discriminator = 2;
                 literal_assign= 1;
-                assigned = symbolTable.literalTable +k;
                 $2->type = CHAR;
-                strcpy(record->type, symbolTable.literalTable[k].type);
-                strcpy(record->value.value.character,$4->value.value.string);
+                strcpy(symbolTable.table[scope].identifiers[j].type, symbolTable.literalTable[k].type);
+                strcpy(symbolTable.table[scope].identifiers[j].value.value.character,$4->value.value.string);
                 break;
               }
             }else{
               if (symbolTable.literalTable[k].discriminator == 3){
                 if(strcmp(symbolTable.literalTable[k].value.string, $4->value.value.string)==0){
-                  record->value.discriminator = 3;
+                  symbolTable.table[scope].identifiers[j].value.discriminator = 3;
                   literal_assign = 1;
-                  assigned = symbolTable.literalTable+k;
                   $2->type = STR;
-                  strcpy(record->type, symbolTable.literalTable[k].type);
-                  record->value.value.string = (char*)malloc(sizeof(char)*strlen($4->value.value.string));
-                  strcpy(record->value.value.string,$4->value.value.string);
+                  strcpy(symbolTable.table[scope].identifiers[j].type, symbolTable.literalTable[k].type);
+                  symbolTable.table[scope].identifiers[j].value.value.string = (char*)malloc(sizeof(char)*strlen($4->value.value.string));
+                  strcpy(symbolTable.table[scope].identifiers[j].value.value.string,$4->value.value.string);
                   break;
                 }
               }
             }
           }
         }
-      
-    }
-    if (literal_assign ==1){
-        printf("Literal assigned with value\n");fflush(stdout);
-        $4->PTR.lt_ptr = assigned;
       }
-  }else{
-    printf("RET NULL\n"); fflush(stdout);
+      if (literal_assign ==1){
+        break;
+      }
+    }
   }
   }
-  codegen_assign(scope,st,&top,&head_quad);
 }
   ;
 Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
@@ -434,112 +468,75 @@ Out: KW_PRINTLN OPEN_PARANTHESIS Body CLOSE_PARANTHESIS STMT_TERMINATOR
 Body: STRING
   | STRING COMMA Val
   ;
-If: KW_IF Exp {lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} OPEN_BLOCK Blk CLOSE_BLOCK Else {
+If: KW_IF Exp OPEN_BLOCK Blk CLOSE_BLOCK Else {
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
     kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $6;
     $$ = get_new_node("IF",5,kids,KW);
+    //printf("%s\n",CUSTYPES[$2->type]);
     if ($2->type != BOOL){
         error_count ++;
         printf("ERROR - Incorrect IF - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
     }
 }
   ;
-Else: KW_ELSE {lab2_else(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} OPEN_BLOCK Blk CLOSE_BLOCK {
-    lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
+Else: KW_ELSE OPEN_BLOCK Blk CLOSE_BLOCK {
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
     kids[0]= get_new_node("{",0,NULL,KW); kids[1]=$3; kids[2] =get_new_node("}",0,NULL,KW);
     $$ = get_new_node("ELSE",3,kids,KW);
 }
-  | {lab2_noelse(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);$$ = get_new_node("LAMBDA",0,NULL,KW);}
+  | {$$ = get_new_node("LAMBDA",0,NULL,KW);}
   ;
-While: KW_WHILE {while_lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} Exp {while_lab2(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} OPEN_BLOCK Blk CLOSE_BLOCK {
-   while_lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
+While: KW_WHILE Exp OPEN_BLOCK Blk CLOSE_BLOCK {
    NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-    kids[0]= $3; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $6; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $5;
+    kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $5;
     $$ = get_new_node("WHILE",5,kids,KW);
-    if ($3->type != BOOL){
+    if ($2->type != BOOL){
         error_count ++;
         printf("ERROR - Incorrect WHILE - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
     }
 }
   ;
-For: KW_FOR id KW_IN Val {for_lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} RANGE Val {for_lab2(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} OPEN_BLOCK Blk CLOSE_BLOCK {
-   for_lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
+For: KW_FOR id KW_IN Val RANGE Val OPEN_BLOCK Blk CLOSE_BLOCK {
    NODE** kids = (NODE**)malloc(sizeof(NODE*)*6);
    NODE** range_kids = (NODE**)malloc(sizeof(NODE*)*2);
     range_kids[0] = $4; range_kids[1] = $6;
     kids[0]= $2; kids[1]=get_new_node("IN",0,NULL,KW);kids[2] = get_new_node("RANGE",2,range_kids,KW); 
-    kids[3]=get_new_node("{",0,NULL,KW);kids[4] = $10;kids[5] = get_new_node("}",0,NULL,KW);
+    kids[3]=get_new_node("{",0,NULL,KW);kids[4] = $8;kids[5] = get_new_node("}",0,NULL,KW);
     $$ = get_new_node("FOR",6,kids,KW);
     //write changes to ST
-    $2->type = DEC;
     
-    if ($4->type !=DEC || $7->type!=DEC){
-      printf("ERROR - Loop range must have DECIMALS given types %s and %s\n",CUSTYPES[$4->type],CUSTYPES[$7->type]);
+    $2->type = DEC;
+    int found = 0;
+    if ($4->type !=DEC || $6->type!=DEC){
+      printf("ERROR - Loop range must have DECIMALS given types %s and %s\n",CUSTYPES[$4->type],CUSTYPES[$6->type]);
       error_count++;
     }
-    struct id* record = lookup_ST(&symbolTable,$2->value.value.string,scope);
-    if (record != NULL){
-              strcpy(record->type,"DECIMAL");
-              record->value.discriminator = 0;
+    //printf("%d\n",scope);fflush(stdout);
+    for (int k = scope; k >= 0; k--){
+      for (int i = 0; i < symbolTable.table[k].count;i++){
+          //printf("%s %s\n",symbolTable.table[k].identifiers[i].name,$2->value.value.string);fflush(stdout);
+          if (strcmp(symbolTable.table[k].identifiers[i].name,$2->value.value.string)==0){
+              strcpy(symbolTable.table[k].identifiers[i].type,"DECIMAL");
+              symbolTable.table[k].identifiers[i].value.discriminator = 0;
+              found = 1;
+              break;
+          }
+        }
+        if (found == 1){
+            break;
+          }
     }
 }
   ;
 %%
 
 int main(){
-        head_quad = NULL;
-        top = 0;
-        temp_count = 0;
-        label_count = 0;
-        queue.queue = NULL;
-        queue.queue_front = -1;
-        queue.queue_rear = -1;
         symbolTable.literal_count = 0;
-        symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal)*100);
-        installLiteral(&symbolTable,"1","DECIMAL");
+        symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal));
         yyparse();
-        display_quad(head_quad);
         return 0;
 }
-
 void yyerror(char *s){
 	printf("ERROR: \"%s\" on line: %d\n",s, yylineno);
   yyparse();
 }
-
-char* get_new_temp(int count){
-  char* new_temp;
-  char buff[3];
-  if (count < 9){
-    new_temp = (char*)malloc(sizeof(char)*2);
-  }else{
-    new_temp = (char*)malloc(sizeof(char)*3);
-  }
-  snprintf(buff,3,"%d",count);
-  strcpy(new_temp,"t");
-  strcat(new_temp, buff);
-  return new_temp;
-}
-
-char* get_new_label(int count){
-  char* new_label;
-  char buff[3];
-  if (count < 9){
-    new_label = (char*)malloc(sizeof(char)*2);
-  }else{
-    new_label = (char*)malloc(sizeof(char)*3);
-  }
-  snprintf(buff,3,"%d",count);
-  strcpy(new_label,"L");
-  strcat(new_label, buff);
-  return new_label;
-}
-
-void push_value(NODE* value) {
-  st[++top] = value;
-}
-
-
-
-

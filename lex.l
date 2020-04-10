@@ -5,6 +5,7 @@
 #include "y.tab.h"
 #include <string.h>
 #include <stdlib.h>
+#include "./lib/symtab_util.h"
 void comment();
 //void yyerror();
 int comment_stack_count = 1;
@@ -12,14 +13,7 @@ int lit=0;
 int scope=0;
 int max_depth=0;
 extern void yyerror(char *);
-void dispLit();
-void installLiteral(char *value,char *type);
-void installID(char *name,int lno);
-void dispST();
-
 struct symtbl symbolTable;
-
-
 %}
 KW_AS as
 KW_BREAK break
@@ -139,25 +133,25 @@ MAIN main
 {MAIN} {return KW_MAIN;}
 {DOC_COMMENT}|{INNER_LINE_DOC}|{INNER_BLOCK_DOC}|{SINGLE_LINE_COMMENT}|{EMPTY_MULTI} {;}
 {MULTI_LINE_COMMENT} {comment();}
-{CHARACTER} {installLiteral(yytext,"CHARACTER");yylval.str = strdup(yytext);return CHARACTER;}
-{STRING} {installLiteral(yytext,"STRING"); yylval.str = strdup(yytext); return STRING;}
+{CHARACTER} {installLiteral(&symbolTable,yytext,"CHARACTER");yylval.str = strdup(yytext);return CHARACTER;}
+{STRING} {installLiteral(&symbolTable,yytext,"STRING"); yylval.str = strdup(yytext); return STRING;}
 {RAW_STRING} {return RAW_STRING;}
-{BYTE} {printf("BYTE");installLiteral(yytext,"BYTE");return BYTE;}
+{BYTE} {printf("BYTE");installLiteral(&symbolTable,yytext,"BYTE");return BYTE;}
 {BYTE_STRING} {printf("BYTE_STRING");return BYTE_STRING;}
 {RAW_BYTE_STRING} {printf("RAW_BYTE_STRING");return RAW_BYTE_STRING;}
-{IDENTIFIER_OR_KEYWORD} {installID(yytext,yylineno);yylval.str = strdup(yytext);return IDENTIFIER;}
+{IDENTIFIER_OR_KEYWORD} {installID(&symbolTable,yytext,scope,yylineno);yylval.str = strdup(yytext);return IDENTIFIER;}
 
-{DECIMAL} {installLiteral(yytext,"DECIMAL");yylval.str = strdup(yytext);return DECIMAL;}
+{DECIMAL} {installLiteral(&symbolTable,yytext,"DECIMAL");yylval.str = strdup(yytext);return DECIMAL;}
 ".." {return RANGE;}
 {HEX_INT} {printf("HEX_INT");return HEX_INT;}
 {OCTAL_INT} {printf("OCTAL_INT");return OCTAL_INT;}
 {BIN_INT} {printf("BIN_INT");yylval.str = strdup(yytext);return BIN_INT;}
-{FLOAT} {installLiteral(yytext,"FLOAT");yylval.str = strdup(yytext);return FLOAT;}
+{FLOAT} {installLiteral(&symbolTable,yytext,"FLOAT");yylval.str = strdup(yytext);return FLOAT;}
 {STMT_TERMINATOR} {return STMT_TERMINATOR;}
 [0-9]+[a-zA-Z]+ {yyerror(yytext);return ERROR;}
 {ARITH_OPERATOR}{2,} {yyerror(yytext);return ERROR;}
 {COMMA} {return COMMA;}
-#EOF {dispST();dispLit();return EOFI;}
+#EOF {dispST(&symbolTable,max_depth);dispLit(&symbolTable);return EOFI;}
 . {yyerror(yytext);}
 
 %%
@@ -193,107 +187,4 @@ loop:
 		comment_stack_count = 1;
 	}
 }
-
-void installLiteral(char *value, char *type) {
-	symbolTable.literalTable = (struct literal*)realloc(symbolTable.literalTable,sizeof(struct literal)*(symbolTable.literal_count+1));
-	if (strcmp(type,"DECIMAL") == 0){
-		symbolTable.literalTable[symbolTable.literal_count].discriminator = 0;
-		symbolTable.literalTable[symbolTable.literal_count].value.integer = atoi(value);
-	}else{
-		if (strcmp(type,"FLOAT") == 0){
-			symbolTable.literalTable[symbolTable.literal_count].discriminator = 1;
-			symbolTable.literalTable[symbolTable.literal_count].value.floating = atof(value);
-		}else{
-			if (strcmp(type,"CHARACTER")==0){
-				symbolTable.literalTable[symbolTable.literal_count].discriminator = 2;
-				strcpy(symbolTable.literalTable[symbolTable.literal_count].value.character,value);
-			}else{
-				if (strcmp(type,"STRING")==0){
-					symbolTable.literalTable[symbolTable.literal_count].discriminator = 3;
-					symbolTable.literalTable[symbolTable.literal_count].value.string = (char*)malloc(sizeof(char)*strlen(value));
-					strcpy(symbolTable.literalTable[symbolTable.literal_count].value.string,value);
-				}
-			}
-		}
-	}
-	strcpy(symbolTable.literalTable[symbolTable.literal_count].type, type);
-	symbolTable.literal_count++;
-}
-void dispLit(){
-	int i;
-	for (i = 0; i < symbolTable.literal_count; i++){
-		if (symbolTable.literalTable[i].discriminator == 0){
-			printf("Literal: %-10d \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.integer, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);fflush(stdout);
-		}else{
-			if (symbolTable.literalTable[i].discriminator == 1){
-				printf("Literal: %-10f \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.floating, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);fflush(stdout);
-			}else{
-				if (symbolTable.literalTable[i].discriminator == 2){
-					printf("Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.character, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);fflush(stdout);
-				}else{
-					if (symbolTable.literalTable[i].discriminator == 3){
-						printf("Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable.literalTable[i].value.string, symbolTable.literalTable[i].type,symbolTable.literalTable[i].discriminator);fflush(stdout);
-					}
-				}
-			}
-		}
-	}
-}
-
-void installID(char *name,int lno){
-	int i;
-	int present=1;
-	for (i = 0; i < symbolTable.table[scope].count; i++){
-		if(strcmp(symbolTable.table[scope].identifiers[i].name, name)==0){
-			present=0;
-			break;
-		}	
-	}
-	if(i==symbolTable.table[scope].count){
-		int x=symbolTable.table[scope].count;
-		strcpy(symbolTable.table[scope].identifiers[x].name, name);
-		symbolTable.table[scope].identifiers[i].lineno=lno;
-		symbolTable.table[scope].count++;
-	}
-}
-
-void dispST(){
-	int i=0;
-	FILE* fp = fopen("symbol_table.txt", "w");
-	while(i<=max_depth){
-		int j=0;
-		char* name = "Name";
-		char* value = "Value";
-		char* dtype = "DataType";
-		char* lineno = "LineNo.";
-		fprintf(fp, "Symbol Table at depth %d\n",i);
-		fprintf(fp, "%-20s\t%-20s\t%-30s\t%-20s\t%-20s\t\n", "Type of Symbol" ,name, value, dtype, lineno);
-		while(j<symbolTable.table[i].count){
-			if (symbolTable.table[i].identifiers[j].value.discriminator == 0){
-				fprintf(fp, "%-20s\t%-20s\t%-30d\t%-20s\t%-20d\t\n","Identifier",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.value.integer,symbolTable.table[i].identifiers[j].type,symbolTable.table[i].identifiers[j].lineno);
-				
-			}else{
-				if (symbolTable.table[i].identifiers[j].value.discriminator == 1){
-					fprintf(fp, "%-20s\t%-20s\t%-30f\t%-20s\t%-20d\t\n","Identifier",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.value.floating,symbolTable.table[i].identifiers[j].type,symbolTable.table[i].identifiers[j].lineno);
-			
-				}else{
-					if (symbolTable.table[i].identifiers[j].value.discriminator == 2){
-						fprintf(fp, "%-20s\t%-20s\t%-30s\t%-20s\t%-20d\t\n","Identifier",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.value.character,symbolTable.table[i].identifiers[j].type,symbolTable.table[i].identifiers[j].lineno);
-
-					}else{
-						if (symbolTable.table[i].identifiers[j].value.discriminator == 3){
-							fprintf(fp, "%-20s\t%-20s\t%-30s\t%-20s\t%-20d\t\n","Identifier",symbolTable.table[i].identifiers[j].name,symbolTable.table[i].identifiers[j].value.value.string,symbolTable.table[i].identifiers[j].type,symbolTable.table[i].identifiers[j].lineno);
-							
-						}
-					}
-				}
-			}
-			j++;
-		}
-		printf("\n");
-		i++;
-	}
-	fclose(fp);
-}
-
 

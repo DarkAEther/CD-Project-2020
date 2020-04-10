@@ -33,7 +33,7 @@ struct id {
 	char type[10];
 }; // Identifier token format
 struct scope_vars{
-	struct id identifiers[100];
+	struct id identifiers[200];
 	int count;
 }; // Scope-specific symbol table
 struct symtbl{
@@ -46,3 +46,27 @@ extern struct symtbl symbolTable;
 extern int yylineno;
 
 enum TYPE {ID, STR, DEC, FLT, CHAR, BOOL, OP,KW,REL,NUM,VAL};
+
+union PTR
+  {
+	  struct id* st_ptr;
+	  struct literal* lt_ptr;
+  };
+
+typedef struct node{
+  struct node** children;
+  int child_count;
+  struct value_wrap value;
+  int level;
+  enum TYPE type;
+  enum TYPE core_type;
+  union PTR PTR;
+  struct node* result;
+} NODE;
+
+NODE* get_new_node(char* token,int child_nodes,NODE** children,enum TYPE type);
+char* get_new_temp(int count);
+char* get_new_label(int count);
+void push_value(NODE* value);
+
+#define HEADER 1

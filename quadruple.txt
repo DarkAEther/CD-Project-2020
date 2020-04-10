@@ -1,0 +1,17 @@
+Quadruple Format Intermediate Code
+Op                  	arg1                	arg2                	result              	
++                   	10                  	20                  	t0                  	
+=                   	t0                  	NULL                	a                   	
+=                   	5.25                	NULL                	b                   	
++                   	a                   	b                   	t1                  	
+=                   	t1                  	NULL                	c                   	
++                   	a                   	3                   	t2                  	
+=                   	t2                  	NULL                	d                   	
+==                  	a                   	5                   	t3                  	
+=                   	56                  	NULL                	dp                  	
+=                   	24                  	NULL                	pasdaf              	
+goto                	NULL                	NULL                	L1                  	
+Label               	NULL                	NULL                	L0                  	
+Label               	NULL                	NULL                	L1                  	
+IfFalse             	t3                  	NULL                	L2                  	
+
