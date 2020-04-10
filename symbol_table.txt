@@ -2,22 +2,24 @@ Symbol Table at depth 0
 Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
 Symbol Table at depth 1
 Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
-Identifier          	d                   	31                            	DECIMAL             	2                   	
-Identifier          	a                   	45                            	DECIMAL             	3                   	
-Identifier          	b                   	33                            	DECIMAL             	4                   	
-Identifier          	c                   	0                             	DECIMAL             	5                   	
-Identifier          	t0                  	0                             	                    	5                   	
-Identifier          	i                   	0                             	DECIMAL             	17                  	
-Identifier          	t5                  	0                             	                    	17                  	
+Identifier          	a                   	45                            	DECIMAL             	2                   	
+Identifier          	b                   	33                            	DECIMAL             	3                   	
+Identifier          	c                   	0                             	                    	4                   	
+Identifier          	t0                  	0                             	                    	4                   	
+Identifier          	d                   	0                             	                    	6                   	
+Identifier          	t1                  	0                             	                    	6                   	
+Identifier          	mpk                 	0                             	                    	18                  	
+Identifier          	t4                  	0                             	                    	18                  	
+Identifier          	t5                  	0                             	                    	19                  	
+Identifier          	i                   	0                             	DECIMAL             	20                  	
+Identifier          	t6                  	0                             	                    	20                  	
+Identifier          	t8                  	0                             	                    	23                  	
 Symbol Table at depth 2
 Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
-Identifier          	t1                  	0                             	                    	6                   	
-Identifier          	if_in_for           	12                            	DECIMAL             	7                   	
-Identifier          	else_in_for         	15                            	DECIMAL             	9                   	
-Identifier          	t2                  	0                             	                    	11                  	
-Identifier          	g                   	60                            	DECIMAL             	12                  	
-Identifier          	t3                  	0                             	                    	14                  	
-Identifier          	a                   	0                             	                    	15                  	
-Identifier          	t4                  	0                             	                    	15                  	
-Identifier          	c                   	0                             	                    	18                  	
-Identifier          	t6                  	0                             	                    	18                  	
+Identifier          	t2                  	0                             	                    	7                   	
+Identifier          	if_in_for           	12                            	DECIMAL             	8                   	
+Identifier          	else_in_for         	15                            	DECIMAL             	10                  	
+Identifier          	t3                  	0                             	                    	12                  	
+Identifier          	g                   	60                            	DECIMAL             	13                  	
+Identifier          	a                   	0                             	                    	21                  	
+Identifier          	t7                  	0                             	                    	21                  	

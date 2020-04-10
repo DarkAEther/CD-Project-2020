@@ -6,6 +6,7 @@
 #include "./lib/lookup.h"
 #include "./lib/quadruple.h"
 #include "./lib/symtab_util.h"
+#include "./lib/optimizer.h"
 #include <string.h>
 #include <assert.h>
 void yyerror();
@@ -144,7 +145,7 @@ Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOC
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*7);
   kids[0]= get_new_node("FN",0,NULL,KW); kids[1] = get_new_node("MAIN",0,NULL,KW); kids[2]=get_new_node("(",0,NULL,KW); kids[3] = get_new_node(")",0,NULL,KW); kids[5] = $6;kids[4] = get_new_node("{",0,NULL,KW); kids[6] = get_new_node("}",0,NULL,KW);
   $$ = get_new_node("MAIN",7,kids,KW);
-  display_quad(head_quad);
+  //display_quad(head_quad);
 }
   ;
 Blk: Code Blk {
@@ -178,26 +179,31 @@ Eval: Val equals Exp STMT_TERMINATOR{
     kids[0] = get_new_node("ASSIGN",2,assign_kids,KW); kids[1] = get_new_node(";",0,NULL,KW);
     $$ = get_new_node("ASSIGNMENT",2,kids,KW);
     //Write changes to ST
-    struct id* record = lookup_ST(&symbolTable,$1->value.value.string,scope);
+    struct id* record = lookup_ST_declared(&symbolTable,$1->value.value.string,scope);
     if (record != NULL){
+        //printf("ASSIGN TYPE %s #%s#\n",record->name,record->type);
         if (strcmp(record->type,"") != 0){
                 //variable is declared
-                strcpy(record->type,CUSTYPES[$3->type]);
+                //strcpy(record->type,CUSTYPES[$3->type]);
                 if ($3->type == DEC){
                   $1->type = DEC;
                   record->value.discriminator = 0;
+                  strcpy(record->type,"DECIMAL");
                 }
                 if ($3->type == FLT){
                   $1->type = FLT;
                   record->value.discriminator = 1;
+                  strcpy(record->type,"FLOAT");
                 }
                 if ($3->type == CHAR){
                   $1->type = CHAR;
-                  record->value.discriminator = 3;
+                  record->value.discriminator = 2;
+                  strcpy(record->type,"CHARACTER");
                 }
                 if ($3->type == STR){
                   $1->type = STR;
-                  record->value.discriminator = 4;
+                  record->value.discriminator = 3;
+                  strcpy(record->type,"STRING");
                 }
                 $1->PTR.st_ptr = record;
           }
@@ -213,6 +219,12 @@ Eval: Val equals Exp STMT_TERMINATOR{
       $3->PTR.lt_ptr = assigned;
     }
   }
+  if ($3->core_type == ID){
+    struct id* record = lookup_ST_declared(&symbolTable,$3->value.value.string,scope);
+    if (record != NULL){
+      $3->PTR.st_ptr = record;
+    }
+  }
   codegen_assign(scope,st,&top,&head_quad);
 }
   ;
@@ -224,7 +236,7 @@ Exp: Val op Exp {
       $$->type = BOOL;
   }
   if ($1->type == ID){
-    struct id* record = lookup_ST(&symbolTable,$1->value.value.string,scope);
+    struct id* record = lookup_ST_declared(&symbolTable,$1->value.value.string,scope);
     if (record != NULL){
       if (strcmp(record->type,"") != 0){
             //declared var
@@ -248,14 +260,28 @@ Exp: Val op Exp {
     struct literal * lit = lookup_LT(&symbolTable,$1->value.value.string);
     if (lit!=NULL){
       //literal found
-      printf("LITERAL 1 FOUND %d\n",lit->value.integer);
+      //printf("LITERAL 1 FOUND %d\n",lit->value.integer);
       $1->PTR.lt_ptr = lit;
+      //printf("DISCRIMINATOR 1 %d\n",lit->discriminator);
+      if (lit->discriminator == 0){
+        $1->type = DEC;
+      }
+      if (lit->discriminator == 1){
+        $1->type = FLT;
+      }
+      if (lit->discriminator == 2){
+        $1->type = CHAR;
+      }
+      if (lit->discriminator == 3){
+        $1->type = STR;
+      }
     }
   }
   if ($3->type == ID){
-    struct id* record = lookup_ST(&symbolTable,$3->value.value.string,scope);
+    struct id* record = lookup_ST_declared(&symbolTable,$3->value.value.string,scope);
     if (record != NULL){
-        // The variable has been found
+        // The variable has been 
+        //printf("TYPE 3 #%s#\n",record->type);
         if (strcmp(record->type,"") != 0){
             //declared var
             if (record->value.discriminator == 0){
@@ -277,8 +303,21 @@ Exp: Val op Exp {
     struct literal * lit = lookup_LT(&symbolTable,$3->value.value.string);
     if (lit!=NULL){
       //literal found
-      printf("LITERAL 3 FOUND %d\n",lit->value.integer);
+      //printf("LITERAL 3 FOUND %d\n",lit->value.integer);
       $3->PTR.lt_ptr = lit;
+      //printf("DISCRIMINATOR 3 %d\n",lit->discriminator);
+      if (lit->discriminator == 0){
+        $3->type = DEC;
+      }
+      if (lit->discriminator  == 1){
+        $3->type = FLT;
+      }
+      if (lit->discriminator  == 2){
+        $3->type = CHAR;
+      }
+      if (lit->discriminator  == 3){
+        $3->type = STR;
+      }
     }
   }
   if ($2->type == NUM){
@@ -335,7 +374,7 @@ Var_dec: KW_LET id equals Exp STMT_TERMINATOR {
   kids[0]= get_new_node("LET",0,NULL,KW); kids[1]=get_new_node("=",2,assign_kids,KW); kids[2] = get_new_node(";",0,NULL,KW);
   $$ = get_new_node("VARDEC",3,kids,KW);
   
-  if ($4->core_type != VAL){
+  if ($4->core_type == ID){
         $2->type = $4->type;
         //write changes to ST
         struct id * record = lookup_ST(&symbolTable,$2->value.value.string,scope);
@@ -365,7 +404,7 @@ Var_dec: KW_LET id equals Exp STMT_TERMINATOR {
   struct id* record = lookup_ST(&symbolTable,$2->value.value.string,scope);
   $2->PTR.st_ptr = record;
   if (record != NULL){
-    printf("Record found\n");fflush(stdout);
+    //printf("Record found\n");fflush(stdout);
       for (int k = 0; k < symbolTable.literal_count;k++){
         if (symbolTable.literalTable[k].discriminator == 0){
           if(symbolTable.literalTable[k].value.integer == atoi($4->value.value.string)){
@@ -419,7 +458,7 @@ Var_dec: KW_LET id equals Exp STMT_TERMINATOR {
       
     }
     if (literal_assign ==1){
-        printf("Literal assigned with value\n");fflush(stdout);
+        //printf("Literal assigned with value\n");fflush(stdout);
         $4->PTR.lt_ptr = assigned;
       }
   }else{
@@ -499,6 +538,23 @@ int main(){
         symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal)*100);
         installLiteral(&symbolTable,"1","DECIMAL");
         yyparse();
+        display_quad(head_quad);
+        printf("After Removal of temp assigns\n\n");
+        remove_temp_assigns(head_quad);
+        display_quad(head_quad);
+        CSE(head_quad);
+        printf("\n After CSE\n\n");
+        display_quad(head_quad);
+        int prop = 1;
+        int fold = 1;
+        while (prop == 1 && fold == 1){
+          prop = const_prop(head_quad);
+          fold = const_fold(head_quad,&symbolTable);
+        }
+        printf("\nAfter Propagating and Folding\n");
+        display_quad(head_quad);
+        deadcode_removal(head_quad);
+        printf("\nAfter dead code removal\n");
         display_quad(head_quad);
         return 0;
 }

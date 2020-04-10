@@ -9,10 +9,22 @@ struct id* lookup_ST(struct symtbl* ST, char* target, int scope){
     //int found = 0;
     for (int k = scope; k >= 0; k--){ //check from current scope going upwards
         for (int j = 0; j < ST->table[k].count; j++){
-            printf("%s %s #%s#\n",target,ST->table[k].identifiers[j].name,ST->table[k].identifiers[j].type);fflush(stdout);
+            //printf("%s %s #%s#\n",target,ST->table[k].identifiers[j].name,ST->table[k].identifiers[j].type);fflush(stdout);
             if (strcmp(target,ST->table[k].identifiers[j].name) == 0){
                 //found
                 //found = 1;
+                return (ST->table[k].identifiers + j);
+            }
+        }
+    }
+    return NULL;
+}
+
+struct id* lookup_ST_declared(struct symtbl* ST, char* target, int scope){
+    //int found = 0;
+    for (int k = scope; k >= 0; k--){ //check from current scope going upwards
+        for (int j = 0; j < ST->table[k].count; j++){ 
+            if (strcmp(target,ST->table[k].identifiers[j].name) == 0 && strcmp(ST->table[k].identifiers[j].type,"")!= 0){
                 return (ST->table[k].identifiers + j);
             }
         }

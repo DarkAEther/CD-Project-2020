@@ -62,7 +62,6 @@ struct id* installID(struct symtbl* symbolTable,char *name,int scope,int lno){
 	for (i = 0; i < symbolTable->table[scope].count; i++){
 		if(strcmp(symbolTable->table[scope].identifiers[i].name, name)==0){
 			present=0;
-			return symbolTable->table[scope].identifiers + i;
 			break;
 		}	
 	}
@@ -71,8 +70,8 @@ struct id* installID(struct symtbl* symbolTable,char *name,int scope,int lno){
 		strcpy(symbolTable->table[scope].identifiers[x].name, name);
 		symbolTable->table[scope].identifiers[i].lineno=lno;
 		symbolTable->table[scope].count++;
-        return symbolTable->table[scope].identifiers + i;
 	}
+	return symbolTable->table[scope].identifiers + i;
 }
 
 void dispST(struct symtbl* symbolTable,int max_depth){

@@ -21,6 +21,7 @@ typedef struct quad {
   union entry arg2;
   union entry result;
   struct quad* next;
+  int dead;
 } QUAD;
 
 extern void display_quad(QUAD*);
