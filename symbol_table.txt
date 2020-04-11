@@ -2,8 +2,8 @@ Symbol Table at depth 0
 Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
 Symbol Table at depth 1
 Type of Symbol      	Name                	Value                         	DataType            	LineNo.             	
-Identifier          	a                   	45                            	DECIMAL             	2                   	
-Identifier          	b                   	33                            	DECIMAL             	3                   	
+Identifier          	a                   	45.500000                     	FLOAT               	2                   	
+Identifier          	b                   	0                             	DECIMAL             	3                   	
 Identifier          	c                   	0                             	                    	4                   	
 Identifier          	t0                  	0                             	                    	4                   	
 Identifier          	d                   	0                             	                    	6                   	

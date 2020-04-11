@@ -1,6 +1,6 @@
 fn main(){
-    let a = 45;
-    let b = 33;
+    let a = 45.5;
+    let b = 33.5;
     let c = a +b;
     b = 3;
     let d = a+b;
