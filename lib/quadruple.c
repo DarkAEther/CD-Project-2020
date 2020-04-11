@@ -116,7 +116,7 @@ void codegen_assign(int scope, NODE** STACK, int* top, QUAD** head_quad) {
 }
 
 void codegen(NODE** STACK, int* top, int* temp_count, int lineno, QUAD** head_quad,int scope,struct symtbl* ST) {
-  printf("Generate Code\n");
+  //printf("Generate Code\n");
   char* tempvar = get_new_temp(*temp_count);
   *temp_count += 1;
   struct id* record = installID(ST,tempvar,scope,lineno);
@@ -144,7 +144,7 @@ void codegen(NODE** STACK, int* top, int* temp_count, int lineno, QUAD** head_qu
       qnode->d_arg2 = 1;
   }
   insert_quad(head_quad, qnode);
-  printf("%s = %s %s %s\n",tempvar, STACK[*top-2]->value.value.string, qnode->op ,STACK[*top]->value.value.string);
+ // printf("%s = %s %s %s\n",tempvar, STACK[*top-2]->value.value.string, qnode->op ,STACK[*top]->value.value.string);
   *top -= 3;
   NODE* new_node = get_new_node(tempvar,0,NULL,ID);
   new_node->PTR.st_ptr = record;

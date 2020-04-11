@@ -35,7 +35,7 @@ struct literal* installLiteral(struct symtbl* symbolTable,char *value, char *typ
 	symbolTable->literal_count++;
 	return (symbolTable->literalTable+symbolTable->literal_count-1);
 }
-void dispLit(struct symtbl* symbolTable){
+void dispLit_stout(struct symtbl* symbolTable){
 	int i;
 	for (i = 0; i < symbolTable->literal_count; i++){
 		if (symbolTable->literalTable[i].discriminator == 0){
@@ -55,7 +55,29 @@ void dispLit(struct symtbl* symbolTable){
 		}
 	}
 }
-
+void dispLit(struct symtbl* symbolTable){
+	int i;
+	FILE* fp = fopen("literal_table.txt","w");
+	fprintf(fp, "Literal Table\n");
+	for (i = 0; i < symbolTable->literal_count; i++){
+		if (symbolTable->literalTable[i].discriminator == 0){
+			fprintf(fp,"Literal: %-10d \t Type: %-10s Discrim: %-10d\n", symbolTable->literalTable[i].value.integer, symbolTable->literalTable[i].type,symbolTable->literalTable[i].discriminator);
+		}else{
+			if (symbolTable->literalTable[i].discriminator == 1){
+				fprintf(fp,"Literal: %-10f \t Type: %-10s Discrim: %-10d\n", symbolTable->literalTable[i].value.floating, symbolTable->literalTable[i].type,symbolTable->literalTable[i].discriminator);
+			}else{
+				if (symbolTable->literalTable[i].discriminator == 2){
+					fprintf(fp,"Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable->literalTable[i].value.character, symbolTable->literalTable[i].type,symbolTable->literalTable[i].discriminator);
+				}else{
+					if (symbolTable->literalTable[i].discriminator == 3){
+						fprintf(fp,"Literal: %-10s \t Type: %-10s Discrim: %-10d\n", symbolTable->literalTable[i].value.string, symbolTable->literalTable[i].type,symbolTable->literalTable[i].discriminator);
+					}
+				}
+			}
+		}
+	}
+	fclose(fp);
+}
 struct id* installID(struct symtbl* symbolTable,char *name,int scope,int lno){
 	int i;
 	int present=1;

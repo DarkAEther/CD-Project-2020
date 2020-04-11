@@ -1144,7 +1144,7 @@ YY_RULE_SETUP
 case 46:
 YY_RULE_SETUP
 #line 154 "lex.l"
-{dispST(&symbolTable,max_depth);dispLit(&symbolTable);return EOFI;}
+{return EOFI;}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP

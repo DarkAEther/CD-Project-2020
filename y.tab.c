@@ -82,6 +82,7 @@ void yyerror();
 int line_num=1;  
 int error_count = 0;  
 extern int scope;
+extern int max_depth;
 NODE* st[100];
 QUEUE queue;
 int top;
@@ -132,7 +133,7 @@ void display_AST_BFS(NODE* root){
 }
 
 
-#line 136 "y.tab.c"
+#line 137 "y.tab.c"
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus
@@ -305,12 +306,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 66 "pointer.y"
+#line 67 "pointer.y"
 
   char *str;
   struct node* node;
 
-#line 314 "y.tab.c"
+#line 315 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -622,11 +623,11 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   138,   138,   139,   140,   141,   142,   144,   151,   156,
-     161,   162,   163,   165,   166,   167,   168,   170,   231,   352,
-     353,   355,   357,   358,   359,   360,   361,   363,   364,   365,
-     367,   369,   471,   473,   474,   476,   476,   486,   486,   492,
-     494,   494,   494,   505,   505,   505
+       0,   139,   139,   140,   141,   142,   143,   145,   152,   157,
+     162,   163,   164,   166,   167,   168,   169,   171,   232,   353,
+     354,   356,   358,   359,   360,   361,   362,   364,   365,   366,
+     368,   370,   472,   474,   475,   477,   477,   487,   487,   493,
+     495,   495,   495,   506,   506,   506
 };
 #endif
 
@@ -1480,86 +1481,86 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 138 "pointer.y"
+#line 139 "pointer.y"
     {printf("\n-------------DONE----------------\n"); }
-#line 1486 "y.tab.c"
+#line 1487 "y.tab.c"
     break;
 
   case 7:
-#line 144 "pointer.y"
+#line 145 "pointer.y"
     {
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*7);
   kids[0]= get_new_node("FN",0,NULL,KW); kids[1] = get_new_node("MAIN",0,NULL,KW); kids[2]=get_new_node("(",0,NULL,KW); kids[3] = get_new_node(")",0,NULL,KW); kids[5] = (yyvsp[-1].node);kids[4] = get_new_node("{",0,NULL,KW); kids[6] = get_new_node("}",0,NULL,KW);
   (yyval.node) = get_new_node("MAIN",7,kids,KW);
-  //display_quad(head_quad);
+  display_AST_BFS((yyval.node));
 }
-#line 1497 "y.tab.c"
+#line 1498 "y.tab.c"
     break;
 
   case 8:
-#line 151 "pointer.y"
+#line 152 "pointer.y"
     {
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*2);
   kids[0]= (yyvsp[-1].node); kids[1] = (yyvsp[0].node); 
   (yyval.node) = get_new_node("BLK",2,kids,KW);
 }
-#line 1507 "y.tab.c"
+#line 1508 "y.tab.c"
     break;
 
   case 9:
-#line 156 "pointer.y"
+#line 157 "pointer.y"
     {
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*2);
   kids[0]= (yyvsp[-1].node); kids[1] = (yyvsp[0].node); 
   (yyval.node) = get_new_node("BLK",2,kids,KW);
 }
-#line 1517 "y.tab.c"
+#line 1518 "y.tab.c"
     break;
 
   case 10:
-#line 161 "pointer.y"
+#line 162 "pointer.y"
     { (yyval.node) = (yyvsp[-1].node);}
-#line 1523 "y.tab.c"
+#line 1524 "y.tab.c"
     break;
 
   case 11:
-#line 162 "pointer.y"
+#line 163 "pointer.y"
     {(yyval.node) = (yyvsp[-1].node);}
-#line 1529 "y.tab.c"
+#line 1530 "y.tab.c"
     break;
 
   case 12:
-#line 163 "pointer.y"
+#line 164 "pointer.y"
     {(yyval.node) = get_new_node("LAMBDA",0,NULL,KW);}
-#line 1535 "y.tab.c"
+#line 1536 "y.tab.c"
     break;
 
   case 13:
-#line 165 "pointer.y"
+#line 166 "pointer.y"
     {(yyval.node) = (yyvsp[0].node);}
-#line 1541 "y.tab.c"
+#line 1542 "y.tab.c"
     break;
 
   case 14:
-#line 166 "pointer.y"
+#line 167 "pointer.y"
     {(yyval.node) = (yyvsp[0].node);}
-#line 1547 "y.tab.c"
+#line 1548 "y.tab.c"
     break;
 
   case 15:
-#line 167 "pointer.y"
+#line 168 "pointer.y"
     {(yyval.node) = (yyvsp[0].node);}
-#line 1553 "y.tab.c"
+#line 1554 "y.tab.c"
     break;
 
   case 16:
-#line 168 "pointer.y"
+#line 169 "pointer.y"
     {(yyval.node) = (yyvsp[0].node);}
-#line 1559 "y.tab.c"
+#line 1560 "y.tab.c"
     break;
 
   case 17:
-#line 170 "pointer.y"
+#line 171 "pointer.y"
     {
   if ((yyvsp[-3].node)->type != ID){
     printf("ERROR - LHS must be an identifier. Given %s Line no. %d\n",CUSTYPES[(yyvsp[-3].node)->type],yylineno);
@@ -1620,11 +1621,11 @@ yyreduce:
   }
   codegen_assign(scope,st,&top,&head_quad);
 }
-#line 1624 "y.tab.c"
+#line 1625 "y.tab.c"
     break;
 
   case 18:
-#line 231 "pointer.y"
+#line 232 "pointer.y"
     {
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*2);
   kids[0] = (yyvsp[-2].node); kids[1] = (yyvsp[0].node); 
@@ -1746,83 +1747,83 @@ yyreduce:
   }
   codegen(st,&top,&temp_count,yylineno,&head_quad,scope,&symbolTable);
 }
-#line 1750 "y.tab.c"
+#line 1751 "y.tab.c"
     break;
 
   case 19:
-#line 352 "pointer.y"
+#line 353 "pointer.y"
     {(yyval.node) = (yyvsp[-1].node);}
-#line 1756 "y.tab.c"
+#line 1757 "y.tab.c"
     break;
 
   case 20:
-#line 353 "pointer.y"
+#line 354 "pointer.y"
     { (yyval.node) = (yyvsp[0].node);}
-#line 1762 "y.tab.c"
+#line 1763 "y.tab.c"
     break;
 
   case 21:
-#line 355 "pointer.y"
+#line 356 "pointer.y"
     {(yyval.node)= get_new_node(yylval.str,0,NULL,ID);(yyval.node)->core_type = ID;push_value((yyval.node));(yyval.node)->PTR.st_ptr = lookup_ST(&symbolTable,yylval.str,scope);}
-#line 1768 "y.tab.c"
+#line 1769 "y.tab.c"
     break;
 
   case 22:
-#line 357 "pointer.y"
+#line 358 "pointer.y"
     {(yyval.node) = get_new_node(yylval.str,0, NULL,ID);(yyval.node)->core_type = ID;push_value((yyval.node));(yyval.node)->PTR.st_ptr = lookup_ST(&symbolTable,yylval.str,scope);}
-#line 1774 "y.tab.c"
+#line 1775 "y.tab.c"
     break;
 
   case 23:
-#line 358 "pointer.y"
+#line 359 "pointer.y"
     {(yyval.node) =get_new_node(yylval.str,0,NULL,STR);(yyval.node)->core_type = VAL;push_value((yyval.node));(yyval.node)->PTR.lt_ptr = lookup_LT(&symbolTable,yylval.str);}
-#line 1780 "y.tab.c"
+#line 1781 "y.tab.c"
     break;
 
   case 24:
-#line 359 "pointer.y"
+#line 360 "pointer.y"
     {(yyval.node) = get_new_node(yylval.str,0,NULL,DEC);(yyval.node)->core_type = VAL;push_value((yyval.node));(yyval.node)->PTR.lt_ptr = lookup_LT(&symbolTable,yylval.str);}
-#line 1786 "y.tab.c"
+#line 1787 "y.tab.c"
     break;
 
   case 25:
-#line 360 "pointer.y"
+#line 361 "pointer.y"
     {(yyval.node) = get_new_node(yylval.str,0,NULL,FLT);(yyval.node)->core_type = VAL;push_value((yyval.node));(yyval.node)->PTR.lt_ptr = lookup_LT(&symbolTable,yylval.str);}
-#line 1792 "y.tab.c"
+#line 1793 "y.tab.c"
     break;
 
   case 26:
-#line 361 "pointer.y"
+#line 362 "pointer.y"
     {(yyval.node) = get_new_node(yylval.str,0,NULL,CHAR);(yyval.node)->core_type = VAL;push_value((yyval.node));(yyval.node)->PTR.lt_ptr = lookup_LT(&symbolTable,yylval.str);}
-#line 1798 "y.tab.c"
+#line 1799 "y.tab.c"
     break;
 
   case 27:
-#line 363 "pointer.y"
+#line 364 "pointer.y"
     {(yyval.node) = get_new_node(yylval.str,0, NULL,NUM);(yyval.node)->core_type = OP;push_value((yyval.node));}
-#line 1804 "y.tab.c"
+#line 1805 "y.tab.c"
     break;
 
   case 28:
-#line 364 "pointer.y"
+#line 365 "pointer.y"
     {(yyval.node) = get_new_node(yylval.str,0, NULL, NUM);(yyval.node)->core_type = OP;push_value((yyval.node));}
-#line 1810 "y.tab.c"
+#line 1811 "y.tab.c"
     break;
 
   case 29:
-#line 365 "pointer.y"
+#line 366 "pointer.y"
     {(yyval.node) = get_new_node(yylval.str,0, NULL,REL);(yyval.node)->core_type = OP;push_value((yyval.node));}
-#line 1816 "y.tab.c"
+#line 1817 "y.tab.c"
     break;
 
   case 30:
-#line 367 "pointer.y"
+#line 368 "pointer.y"
     {(yyval.node) = get_new_node(yylval.str,0, NULL,NUM);(yyval.node)->core_type = OP;push_value((yyval.node));}
-#line 1822 "y.tab.c"
+#line 1823 "y.tab.c"
     break;
 
   case 31:
-#line 369 "pointer.y"
+#line 370 "pointer.y"
     {
   
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
@@ -1924,98 +1925,98 @@ yyreduce:
   }
   codegen_assign(scope,st,&top,&head_quad);
 }
-#line 1928 "y.tab.c"
+#line 1929 "y.tab.c"
     break;
 
   case 35:
-#line 476 "pointer.y"
+#line 477 "pointer.y"
     {lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);}
-#line 1934 "y.tab.c"
+#line 1935 "y.tab.c"
     break;
 
   case 36:
-#line 476 "pointer.y"
+#line 477 "pointer.y"
     {
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-    kids[0]= (yyvsp[-5].node); kids[1]=get_new_node("{",0,NULL,KW);kids[2] = (yyvsp[-3].node); kids[3]=get_new_node("}",0,NULL,KW);kids[4] = (yyvsp[-1].node);
+    kids[0]= (yyvsp[-5].node); kids[1]=get_new_node("{",0,NULL,KW);kids[2] = (yyvsp[-2].node); kids[3]=get_new_node("}",0,NULL,KW);kids[4] = (yyvsp[0].node);
     (yyval.node) = get_new_node("IF",5,kids,KW);
     if ((yyvsp[-5].node)->type != BOOL){
         error_count ++;
         printf("ERROR - Incorrect IF - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
     }
 }
-#line 1948 "y.tab.c"
+#line 1949 "y.tab.c"
     break;
 
   case 37:
-#line 486 "pointer.y"
+#line 487 "pointer.y"
     {lab2_else(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);}
-#line 1954 "y.tab.c"
+#line 1955 "y.tab.c"
     break;
 
   case 38:
-#line 486 "pointer.y"
+#line 487 "pointer.y"
     {
     lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
-    kids[0]= get_new_node("{",0,NULL,KW); kids[1]=(yyvsp[-2].node); kids[2] =get_new_node("}",0,NULL,KW);
+    kids[0]= get_new_node("{",0,NULL,KW); kids[1]=(yyvsp[-1].node); kids[2] =get_new_node("}",0,NULL,KW);
     (yyval.node) = get_new_node("ELSE",3,kids,KW);
 }
-#line 1965 "y.tab.c"
+#line 1966 "y.tab.c"
     break;
 
   case 39:
-#line 492 "pointer.y"
+#line 493 "pointer.y"
     {lab2_noelse(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);(yyval.node) = get_new_node("LAMBDA",0,NULL,KW);}
-#line 1971 "y.tab.c"
+#line 1972 "y.tab.c"
     break;
 
   case 40:
-#line 494 "pointer.y"
+#line 495 "pointer.y"
     {while_lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);}
-#line 1977 "y.tab.c"
+#line 1978 "y.tab.c"
     break;
 
   case 41:
-#line 494 "pointer.y"
+#line 495 "pointer.y"
     {while_lab2(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);}
-#line 1983 "y.tab.c"
+#line 1984 "y.tab.c"
     break;
 
   case 42:
-#line 494 "pointer.y"
+#line 495 "pointer.y"
     {
    while_lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
-   NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-    kids[0]= (yyvsp[-4].node); kids[1]=get_new_node("{",0,NULL,KW);kids[2] = (yyvsp[-1].node); kids[3]=get_new_node("}",0,NULL,KW);kids[4] = (yyvsp[-2].node);
-    (yyval.node) = get_new_node("WHILE",5,kids,KW);
+   NODE** kids = (NODE**)malloc(sizeof(NODE*)*4);
+    kids[0]= (yyvsp[-4].node); kids[1]=get_new_node("{",0,NULL,KW);kids[2] = (yyvsp[-1].node); kids[3]=get_new_node("}",0,NULL,KW);//kids[4] = $5;
+    (yyval.node) = get_new_node("WHILE",4,kids,KW);
     if ((yyvsp[-4].node)->type != BOOL){
         error_count ++;
         printf("ERROR - Incorrect WHILE - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
     }
 }
-#line 1998 "y.tab.c"
+#line 1999 "y.tab.c"
     break;
 
   case 43:
-#line 505 "pointer.y"
+#line 506 "pointer.y"
     {for_lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);}
-#line 2004 "y.tab.c"
+#line 2005 "y.tab.c"
     break;
 
   case 44:
-#line 505 "pointer.y"
+#line 506 "pointer.y"
     {for_lab2(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);}
-#line 2010 "y.tab.c"
+#line 2011 "y.tab.c"
     break;
 
   case 45:
-#line 505 "pointer.y"
+#line 506 "pointer.y"
     {
    for_lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
    NODE** kids = (NODE**)malloc(sizeof(NODE*)*6);
    NODE** range_kids = (NODE**)malloc(sizeof(NODE*)*2);
-    range_kids[0] = (yyvsp[-7].node); range_kids[1] = (yyvsp[-5].node);
+    range_kids[0] = (yyvsp[-7].node); range_kids[1] = (yyvsp[-4].node);
     kids[0]= (yyvsp[-9].node); kids[1]=get_new_node("IN",0,NULL,KW);kids[2] = get_new_node("RANGE",2,range_kids,KW); 
     kids[3]=get_new_node("{",0,NULL,KW);kids[4] = (yyvsp[-1].node);kids[5] = get_new_node("}",0,NULL,KW);
     (yyval.node) = get_new_node("FOR",6,kids,KW);
@@ -2032,11 +2033,11 @@ yyreduce:
               record->value.discriminator = 0;
     }
 }
-#line 2036 "y.tab.c"
+#line 2037 "y.tab.c"
     break;
 
 
-#line 2040 "y.tab.c"
+#line 2041 "y.tab.c"
 
       default: break;
     }
@@ -2268,7 +2269,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 527 "pointer.y"
+#line 528 "pointer.y"
 
 
 int main(){
@@ -2283,24 +2284,30 @@ int main(){
         symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal)*100);
         installLiteral(&symbolTable,"1","DECIMAL");
         yyparse();
-        display_quad(head_quad);
-        printf("After Removal of temp assigns\n\n");
-        remove_temp_assigns(head_quad);
-        display_quad(head_quad);
-        CSE(head_quad);
-        printf("\n After CSE\n\n");
-        display_quad(head_quad);
-        int prop = 1;
-        int fold = 1;
-        while (prop == 1 && fold == 1){
-          prop = const_prop(head_quad);
-          fold = const_fold(head_quad,&symbolTable);
+        if (error_count > 0){
+          printf("Compilation Errors - Will not generate ICG\n");
+        }else{
+          display_quad(head_quad);
+          printf("After Removal of temp assigns\n\n");
+          remove_temp_assigns(head_quad);
+          display_quad(head_quad);
+          CSE(head_quad);
+          printf("\n After CSE\n\n");
+          display_quad(head_quad);
+          int prop = 1;
+          int fold = 1;
+          while (prop == 1 && fold == 1){
+            prop = const_prop(head_quad);
+            fold = const_fold(head_quad,&symbolTable);
+          }
+          printf("\nAfter Propagating and Folding\n");
+          display_quad(head_quad);
+          deadcode_removal(head_quad);
+          printf("\nAfter dead code removal\n");
+          display_quad(head_quad);
+          dispLit(&symbolTable);
+          dispST(&symbolTable,max_depth);
         }
-        printf("\nAfter Propagating and Folding\n");
-        display_quad(head_quad);
-        deadcode_removal(head_quad);
-        printf("\nAfter dead code removal\n");
-        display_quad(head_quad);
         return 0;
 }
 

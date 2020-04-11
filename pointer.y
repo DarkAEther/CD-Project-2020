@@ -13,6 +13,7 @@ void yyerror();
 int line_num=1;  
 int error_count = 0;  
 extern int scope;
+extern int max_depth;
 NODE* st[100];
 QUEUE queue;
 int top;
@@ -145,7 +146,7 @@ Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOC
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*7);
   kids[0]= get_new_node("FN",0,NULL,KW); kids[1] = get_new_node("MAIN",0,NULL,KW); kids[2]=get_new_node("(",0,NULL,KW); kids[3] = get_new_node(")",0,NULL,KW); kids[5] = $6;kids[4] = get_new_node("{",0,NULL,KW); kids[6] = get_new_node("}",0,NULL,KW);
   $$ = get_new_node("MAIN",7,kids,KW);
-  //display_quad(head_quad);
+  display_AST_BFS($$);
 }
   ;
 Blk: Code Blk {
@@ -475,7 +476,7 @@ Body: STRING
   ;
 If: KW_IF Exp {lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} OPEN_BLOCK Blk CLOSE_BLOCK Else {
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-    kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $4; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $6;
+    kids[0]= $2; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $5; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $7;
     $$ = get_new_node("IF",5,kids,KW);
     if ($2->type != BOOL){
         error_count ++;
@@ -486,16 +487,16 @@ If: KW_IF Exp {lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno
 Else: KW_ELSE {lab2_else(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} OPEN_BLOCK Blk CLOSE_BLOCK {
     lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
     NODE** kids = (NODE**)malloc(sizeof(NODE*)*3);
-    kids[0]= get_new_node("{",0,NULL,KW); kids[1]=$3; kids[2] =get_new_node("}",0,NULL,KW);
+    kids[0]= get_new_node("{",0,NULL,KW); kids[1]=$4; kids[2] =get_new_node("}",0,NULL,KW);
     $$ = get_new_node("ELSE",3,kids,KW);
 }
   | {lab2_noelse(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);$$ = get_new_node("LAMBDA",0,NULL,KW);}
   ;
 While: KW_WHILE {while_lab1(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} Exp {while_lab2(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);} OPEN_BLOCK Blk CLOSE_BLOCK {
    while_lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
-   NODE** kids = (NODE**)malloc(sizeof(NODE*)*5);
-    kids[0]= $3; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $6; kids[3]=get_new_node("}",0,NULL,KW);kids[4] = $5;
-    $$ = get_new_node("WHILE",5,kids,KW);
+   NODE** kids = (NODE**)malloc(sizeof(NODE*)*4);
+    kids[0]= $3; kids[1]=get_new_node("{",0,NULL,KW);kids[2] = $6; kids[3]=get_new_node("}",0,NULL,KW);//kids[4] = $5;
+    $$ = get_new_node("WHILE",4,kids,KW);
     if ($3->type != BOOL){
         error_count ++;
         printf("ERROR - Incorrect WHILE - CONDITION does not evaluate to Boolean Line no: %d\n",yylineno);
@@ -506,7 +507,7 @@ For: KW_FOR id KW_IN Val {for_lab1(&symbolTable,st,&top,&temp_count,&label_count
    for_lab3(&symbolTable,st,&top,&temp_count,&label_count,scope,yylineno,&head_quad);
    NODE** kids = (NODE**)malloc(sizeof(NODE*)*6);
    NODE** range_kids = (NODE**)malloc(sizeof(NODE*)*2);
-    range_kids[0] = $4; range_kids[1] = $6;
+    range_kids[0] = $4; range_kids[1] = $7;
     kids[0]= $2; kids[1]=get_new_node("IN",0,NULL,KW);kids[2] = get_new_node("RANGE",2,range_kids,KW); 
     kids[3]=get_new_node("{",0,NULL,KW);kids[4] = $10;kids[5] = get_new_node("}",0,NULL,KW);
     $$ = get_new_node("FOR",6,kids,KW);
@@ -538,24 +539,30 @@ int main(){
         symbolTable.literalTable = (struct literal*)malloc(sizeof(struct literal)*100);
         installLiteral(&symbolTable,"1","DECIMAL");
         yyparse();
-        display_quad(head_quad);
-        printf("After Removal of temp assigns\n\n");
-        remove_temp_assigns(head_quad);
-        display_quad(head_quad);
-        CSE(head_quad);
-        printf("\n After CSE\n\n");
-        display_quad(head_quad);
-        int prop = 1;
-        int fold = 1;
-        while (prop == 1 && fold == 1){
-          prop = const_prop(head_quad);
-          fold = const_fold(head_quad,&symbolTable);
+        if (error_count > 0){
+          printf("Compilation Errors - Will not generate ICG\n");
+        }else{
+          display_quad(head_quad);
+          printf("After Removal of temp assigns\n\n");
+          remove_temp_assigns(head_quad);
+          display_quad(head_quad);
+          CSE(head_quad);
+          printf("\n After CSE\n\n");
+          display_quad(head_quad);
+          int prop = 1;
+          int fold = 1;
+          while (prop == 1 && fold == 1){
+            prop = const_prop(head_quad);
+            fold = const_fold(head_quad,&symbolTable);
+          }
+          printf("\nAfter Propagating and Folding\n");
+          display_quad(head_quad);
+          deadcode_removal(head_quad);
+          printf("\nAfter dead code removal\n");
+          display_quad(head_quad);
+          dispLit(&symbolTable);
+          dispST(&symbolTable,max_depth);
         }
-        printf("\nAfter Propagating and Folding\n");
-        display_quad(head_quad);
-        deadcode_removal(head_quad);
-        printf("\nAfter dead code removal\n");
-        display_quad(head_quad);
         return 0;
 }
 

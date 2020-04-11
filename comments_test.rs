@@ -9,13 +9,11 @@ fn main(){
     } else {
         let else_in_for = 15;
     }
-    if b < 5 {
-       let g = 60;
+    while a<10 {
+        a = a +1;
     }
-    // while a<10 {
-    //     a = a +1;
-    // }
     let mpk = a+b;
+    let kgf = 134;
     a = a + 20;
     for i in 100..200{
        a = a + 89;

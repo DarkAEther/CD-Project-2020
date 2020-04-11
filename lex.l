@@ -151,7 +151,7 @@ MAIN main
 [0-9]+[a-zA-Z]+ {yyerror(yytext);return ERROR;}
 {ARITH_OPERATOR}{2,} {yyerror(yytext);return ERROR;}
 {COMMA} {return COMMA;}
-#EOF {dispST(&symbolTable,max_depth);dispLit(&symbolTable);return EOFI;}
+#EOF {return EOFI;}
 . {yyerror(yytext);}
 
 %%

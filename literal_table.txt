@@ -1,0 +1,18 @@
+Literal Table
+Literal: 1          	 Type: DECIMAL    Discrim: 0         
+Literal: 45         	 Type: DECIMAL    Discrim: 0         
+Literal: 33         	 Type: DECIMAL    Discrim: 0         
+Literal: 3          	 Type: DECIMAL    Discrim: 0         
+Literal: 10         	 Type: DECIMAL    Discrim: 0         
+Literal: 12         	 Type: DECIMAL    Discrim: 0         
+Literal: 15         	 Type: DECIMAL    Discrim: 0         
+Literal: 10         	 Type: DECIMAL    Discrim: 0         
+Literal: 1          	 Type: DECIMAL    Discrim: 0         
+Literal: 134        	 Type: DECIMAL    Discrim: 0         
+Literal: 20         	 Type: DECIMAL    Discrim: 0         
+Literal: 100        	 Type: DECIMAL    Discrim: 0         
+Literal: 200        	 Type: DECIMAL    Discrim: 0         
+Literal: 89         	 Type: DECIMAL    Discrim: 0         
+Literal: 90         	 Type: DECIMAL    Discrim: 0         
+Literal: 78         	 Type: DECIMAL    Discrim: 0         
+Literal: 48         	 Type: DECIMAL    Discrim: 0         
