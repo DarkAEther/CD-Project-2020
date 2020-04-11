@@ -10,6 +10,7 @@ int error_count = 0;
 extern int scope;
 
 char* CUSTYPES[] ={"ID\0","STRING\0","DECIMAL\0","FLOAT\0","CHARACTER\0","BOOLEAN\0","OP\0","KW\0"};
+/*
 typedef struct node{
   struct node** children;
   int child_count;
@@ -18,7 +19,7 @@ typedef struct node{
   enum TYPE type;
   enum TYPE core_type;
 } NODE;
-
+*/
 
 NODE* get_new_node(char* token,int child_nodes,NODE** children,enum TYPE type){
   NODE* newnode = (NODE*)malloc(sizeof(NODE));

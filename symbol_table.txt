@@ -8,9 +8,9 @@ Identifier          	c                   	0                             	       
 Identifier          	t0                  	0                             	                    	4                   	
 Identifier          	d                   	0                             	                    	6                   	
 Identifier          	t1                  	0                             	                    	6                   	
-Identifier          	mpk                 	0                             	                    	15                  	
-Identifier          	t5                  	0                             	                    	15                  	
-Identifier          	kgf                 	134                           	DECIMAL             	16                  	
+Identifier          	e                   	1                             	DECIMAL             	12                  	
+Identifier          	mpk                 	0                             	                    	16                  	
+Identifier          	t5                  	0                             	                    	16                  	
 Identifier          	t6                  	0                             	                    	17                  	
 Identifier          	i                   	0                             	DECIMAL             	18                  	
 Identifier          	t7                  	0                             	                    	18                  	
@@ -20,7 +20,8 @@ Type of Symbol      	Name                	Value                         	DataTyp
 Identifier          	t2                  	0                             	                    	7                   	
 Identifier          	if_in_for           	12                            	DECIMAL             	8                   	
 Identifier          	else_in_for         	15                            	DECIMAL             	10                  	
-Identifier          	t3                  	0                             	                    	12                  	
-Identifier          	a                   	0                             	                    	13                  	
-Identifier          	t4                  	0                             	                    	13                  	
+Identifier          	t3                  	0                             	                    	13                  	
+Identifier          	e                   	0                             	                    	14                  	
+Identifier          	t4                  	0                             	                    	14                  	
+Identifier          	a                   	0                             	                    	19                  	
 Identifier          	t8                  	0                             	                    	19                  	
