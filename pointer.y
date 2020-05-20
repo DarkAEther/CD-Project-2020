@@ -146,7 +146,7 @@ Main: KW_FN KW_MAIN OPEN_PARANTHESIS CLOSE_PARANTHESIS OPEN_BLOCK Blk CLOSE_BLOC
   NODE** kids = (NODE**)malloc(sizeof(NODE*)*7);
   kids[0]= get_new_node("FN",0,NULL,KW); kids[1] = get_new_node("MAIN",0,NULL,KW); kids[2]=get_new_node("(",0,NULL,KW); kids[3] = get_new_node(")",0,NULL,KW); kids[5] = $6;kids[4] = get_new_node("{",0,NULL,KW); kids[6] = get_new_node("}",0,NULL,KW);
   $$ = get_new_node("MAIN",7,kids,KW);
-  display_AST_BFS($$);
+  //display_AST_BFS($$);
 }
   ;
 Blk: Code Blk {
@@ -159,8 +159,12 @@ Blk: Code Blk {
   kids[0]= $1; kids[1] = $2; 
   $$ = get_new_node("BLK",2,kids,KW);
 }
-  | While Blk { $$ = $1;}
-  | For Blk {$$ = $1;}
+  | While Blk { NODE** kids = (NODE**)malloc(sizeof(NODE*)*2);
+  kids[0]= $1; kids[1] = $2; 
+  $$ = get_new_node("BLK",2,kids,KW);}
+  | For Blk {NODE** kids = (NODE**)malloc(sizeof(NODE*)*2);
+  kids[0]= $1; kids[1] = $2; 
+  $$ = get_new_node("BLK",2,kids,KW);}
   | {$$ = get_new_node("LAMBDA",0,NULL,KW);}
   ;
 Code: Eval {$$ = $1;}
@@ -542,27 +546,31 @@ int main(){
         if (error_count > 0){
           printf("Compilation Errors - Will not generate ICG\n");
         }else{
-          display_quad(head_quad);
-          printf("After Removal of temp assigns\n\n");
+          //display_quad(head_quad);
+          //printf("After Removal of temp assigns\n\n");
           remove_temp_assigns(head_quad);
-          display_quad(head_quad);
+          //display_quad(head_quad);
           CSE(head_quad);
-          printf("\n After CSE\n\n");
-          display_quad(head_quad);
+          //printf("\n After CSE\n\n");
+          //display_quad(head_quad);
           int prop = 1;
           int fold = 1;
           while (prop == 1 && fold == 1){
             prop = const_prop(head_quad);
             fold = const_fold(head_quad,&symbolTable);
           }
-          printf("\nAfter Propagating and Folding\n");
-          display_quad(head_quad);
+          //printf("\nAfter Propagating and Folding\n");
+          //display_quad(head_quad);
           deadcode_removal(head_quad);
-          printf("\nAfter dead code removal\n");
+          //printf("\nAfter dead code removal\n");
+          //display_quad(head_quad);
+          remove_dead_variables(&head_quad);
+          //printf("After Removal dead variables\n\n");
+          printf("@\n");
           display_quad(head_quad);
-          dispLit(&symbolTable);
-          dispST(&symbolTable,max_depth);
-        }
+          //dispLit(&symbolTable);
+          //dispST(&symbolTable,max_depth);
+         }
         return 0;
 }
 

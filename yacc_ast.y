@@ -75,7 +75,7 @@ void display_AST_BFS(NODE* root){
     return;
   }
   enqueue(root);
-  //printf("CAME HERE\n");fflush(stdout);
+  
   NODE* current;int currlvl = 0;
   while (queue_front!= -1){
     current = dequeue();
@@ -84,7 +84,7 @@ void display_AST_BFS(NODE* root){
       printf("\n");
       currlvl = current->level;
     }
-    //printf("CAME HERE TWO\n");fflush(stdout);
+    
    
     printf(" %s ",current->value.value.string);fflush(stdout);
     //printf("Child count %d\n",current->child_count);fflush(stdout);

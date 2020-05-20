@@ -9,6 +9,55 @@
 #include "optimizer.h"
 #endif
 
+void remove_dead_variables(QUAD** head){
+    QUAD* temp = *head;
+    QUAD* internal = NULL;
+    QUAD* prev = NULL;
+    while (temp->next != NULL){
+        int delete = 1;
+        if (temp->d_res == 0){
+            //symbol table entry - uses a variable
+           
+            internal = temp->next;
+            while (internal!=NULL){
+                if (internal->d_arg1 == 0){
+                    if (strcmp(internal->arg1.st_entry->name,temp->result.st_entry->name)==0){
+                        //variable is being used here. Can't kill it.
+                        delete = 0;
+                        break;
+                    }
+                }
+                if (internal->d_arg2 == 0){
+                    if (strcmp(internal->arg2.st_entry->name,temp->result.st_entry->name)==0){
+                        //variable is being used here. Can't kill it.
+                        delete = 0;
+                        break;
+                    }
+                }
+                internal = internal->next;
+            }      
+        }
+         if (temp->d_res == 0 && delete == 1){
+                //var was not detected elsewhere, remove the entry
+                if (prev != NULL){
+                    prev->next = temp->next;
+                    free(temp);
+                    temp = prev->next;
+                }else{
+                    QUAD* t = temp;
+                    temp = temp->next;
+                    free(t);
+                    *head = temp;
+                }
+                
+        }else{
+                prev = temp;
+                temp = temp->next;
+        }
+        
+    }
+}
+
 void remove_temp_assigns(QUAD* quad_table){
     QUAD* temp = quad_table;
     QUAD* next = NULL;
@@ -105,10 +154,12 @@ void CSE(QUAD* quad_table){
 int const_prop(QUAD* head){
     QUAD* temp = head;
     QUAD* traverser = NULL;
+    QUAD* prev = NULL;
     int changed = 0;
     int label_state = 0;
     while (temp->next->next!= NULL){
         if (strcmp(temp->op,"=")==0 && temp->d_arg2 == -1){ //check for value assignments
+            prev = traverser;
             traverser = temp->next;
             label_state = 0;
             while (traverser != NULL){
@@ -120,7 +171,7 @@ int const_prop(QUAD* head){
                     label_state = 0;
                     //printf("LABEL SET 0\n");
                 }
-                if (label_state == 0){
+                if (label_state == 0 && (prev!=NULL && strcmp(prev->op,"Label")!= 0) && (traverser->next!=NULL && strcmp(traverser->next->op,"ifFalse")!=0)){
                     if (traverser->d_arg1 == 0 && strcmp(traverser->arg1.st_entry->name,temp->result.st_entry->name)==0){
                         //argument one is the same variable
                         traverser->d_arg1 = 1;
@@ -138,6 +189,7 @@ int const_prop(QUAD* head){
                 if (traverser->d_res == 0 && strcmp(traverser->result.st_entry->name,temp->result.st_entry->name)==0){
                         break; // the value may have been updated..stop propagating
                 }
+                prev = traverser;
                 traverser = traverser->next;
             }
         }
