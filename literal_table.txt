@@ -1,7 +1,7 @@
 Literal Table
 Literal: 1          	 Type: DECIMAL    Discrim: 0         
-Literal: 45         	 Type: DECIMAL    Discrim: 0         
-Literal: 33         	 Type: DECIMAL    Discrim: 0         
+Literal: 45.500000  	 Type: FLOAT      Discrim: 1         
+Literal: 33.500000  	 Type: FLOAT      Discrim: 1         
 Literal: 3          	 Type: DECIMAL    Discrim: 0         
 Literal: 10         	 Type: DECIMAL    Discrim: 0         
 Literal: 12         	 Type: DECIMAL    Discrim: 0         
@@ -14,6 +14,4 @@ Literal: 100        	 Type: DECIMAL    Discrim: 0
 Literal: 200        	 Type: DECIMAL    Discrim: 0         
 Literal: 89         	 Type: DECIMAL    Discrim: 0         
 Literal: 90         	 Type: DECIMAL    Discrim: 0         
-Literal: 78         	 Type: DECIMAL    Discrim: 0         
-Literal: 48         	 Type: DECIMAL    Discrim: 0         
-Literal: 65         	 Type: DECIMAL    Discrim: 0         
+Literal: 79.000000  	 Type: FLOAT      Discrim: 1         
