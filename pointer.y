@@ -566,7 +566,7 @@ int main(){
           //display_quad(head_quad);
           remove_dead_variables(&head_quad);
           //printf("After Removal dead variables\n\n");
-          printf("@\n");
+          //printf("@\n");
           display_quad(head_quad);
           //dispLit(&symbolTable);
           //dispST(&symbolTable,max_depth);

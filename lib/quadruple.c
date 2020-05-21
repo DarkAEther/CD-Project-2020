@@ -11,59 +11,60 @@
 void display_quad(QUAD* head_quad) {
     printf("Quadruple Format ICG\n");
     QUAD* temp = head_quad;
-    printf("Op\tArg1\tArg2\tResult\n");
+    printf("Op,Arg1,Arg2,Result\n");
+    printf("@");
     int disc = -1;
     while(temp != NULL) {
         disc = -1;
-        printf("%s\t", temp->op);fflush(stdout);
+        printf("%s,", temp->op);fflush(stdout);
         if (temp->d_arg1 == 0) {
             //identifier
-            printf("%s\t",temp->arg1.st_entry->name);
+            printf("%s,",temp->arg1.st_entry->name);
         }else if (temp->d_arg1 == 1){
             disc = temp->arg1.lt_entry->discriminator;
             switch (disc)
             {
             case 0:
-                printf("%d\t", temp->arg1.lt_entry->value.integer);fflush(stdout);
+                printf("%d,", temp->arg1.lt_entry->value.integer);fflush(stdout);
                 break;
             case 1:
-                printf("%f\t", temp->arg1.lt_entry->value.floating);fflush(stdout);
+                printf("%f,", temp->arg1.lt_entry->value.floating);fflush(stdout);
                 break;
             case 2:
-                printf("%s\t", temp->arg1.lt_entry->value.character);fflush(stdout);
+                printf("%s,", temp->arg1.lt_entry->value.character);fflush(stdout);
                 break;
             case 3:
-                printf("%s\t", temp->arg1.lt_entry->value.string);fflush(stdout);
+                printf("%s,", temp->arg1.lt_entry->value.string);fflush(stdout);
                 break;
             default:
                 break;
             }
         }else{
-            printf("NULL\t");
+            printf("NULL,");
         }
         if (temp->d_arg2 == 0) {
-            printf("%s\t", temp->arg2.st_entry->name);fflush(stdout);
+            printf("%s,", temp->arg2.st_entry->name);fflush(stdout);
         }else if (temp->d_arg2 == 1) {
             disc = temp->arg2.lt_entry->discriminator;
             switch (disc)
             {
             case 0:
-                printf("%d\t", temp->arg2.lt_entry->value.integer);fflush(stdout);
+                printf("%d,", temp->arg2.lt_entry->value.integer);fflush(stdout);
                 break;
             case 1:
-                printf("%f\t", temp->arg2.lt_entry->value.floating);fflush(stdout);
+                printf("%f,", temp->arg2.lt_entry->value.floating);fflush(stdout);
                 break;
             case 2:
-                printf("%s\t", temp->arg2.lt_entry->value.character);fflush(stdout);
+                printf("%s,", temp->arg2.lt_entry->value.character);fflush(stdout);
                 break;
             case 3:
-                printf("%s\t", temp->arg2.lt_entry->value.string);fflush(stdout);
+                printf("%s,", temp->arg2.lt_entry->value.string);fflush(stdout);
                 break;
             default:
                 break;
             }
         }else{
-            printf("NULL\t");
+            printf("NULL,");
         }
         if (temp->d_res == 0) {
             printf("%s\n", temp->result.st_entry->name);fflush(stdout);
