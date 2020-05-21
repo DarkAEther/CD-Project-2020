@@ -34,6 +34,37 @@ void remove_dead_variables(QUAD** head){
                         break;
                     }
                 }
+                if (strcmp(internal->op,"goto") == 0 && (internal->next!=NULL && strcmp(internal->next->op,"Label")==0)){
+                    if (strcmp(internal->result.l_val,internal->next->result.l_val) < 0){
+                        //the goto is before the next label (this is a loop)
+                        //start looking for the label from head
+                        QUAD* tempsearch = *head;
+                        //QUAD* tempsearch = NULL;
+                        while (tempsearch->next!=NULL){
+                            if (strcmp(tempsearch->op,"Label") == 0 && strcmp(tempsearch->result.l_val,internal->result.l_val)==0){
+                                    tempsearch = tempsearch->next; //starting position
+                                    if (tempsearch->d_arg1 == 0){
+                                        if (strcmp(tempsearch->arg1.st_entry->name,temp->result.st_entry->name)==0){
+                                            //variable is being used here. Can't kill it.
+                                            delete = 0;
+                                            break;
+                                        }
+                                    }
+                                    if (tempsearch->d_arg2 == 0){
+                                        if (strcmp(tempsearch->arg2.st_entry->name,temp->result.st_entry->name)==0){
+                                            //variable is being used here. Can't kill it.
+                                            delete = 0;
+                                            break;
+                                        }
+                                    }
+                            }
+                            tempsearch = tempsearch->next;
+                        }
+                        if (delete ==0){
+                            break;
+                        }
+                    }
+                }
                 internal = internal->next;
             }      
         }

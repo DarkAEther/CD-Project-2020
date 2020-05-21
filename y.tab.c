@@ -2308,7 +2308,7 @@ int main(){
           //display_quad(head_quad);
           deadcode_removal(head_quad);
           //printf("\nAfter dead code removal\n");
-          //display_quad(head_quad);
+          display_quad(head_quad);
           remove_dead_variables(&head_quad);
           //printf("After Removal dead variables\n\n");
           printf("@\n");
