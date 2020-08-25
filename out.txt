@@ -3,8 +3,8 @@
 Quadruple Format ICG
 Op,Arg1,Arg2,Result
 @=,45.500000,NULL,a
++,45.500000,3,d
 <,a,10,t2
-=,6,NULL,d
 ifFalse,t2,NULL,L0
 goto,NULL,NULL,L1
 Label,NULL,NULL,L0
@@ -27,4 +27,3 @@ goto,NULL,NULL,L4
 Label,NULL,NULL,L5
 *,a,90,t9
 =,t9,NULL,a
-=,20,NULL,t6

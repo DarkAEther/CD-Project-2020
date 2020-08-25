@@ -31,6 +31,7 @@ NODE* get_new_node(char* token,int child_nodes,NODE** children,enum TYPE type){
   newnode->child_count = child_nodes;
   newnode->children = children;
   newnode->type = type;
+  newnode->level = 0;
   return newnode;
 }
 
@@ -50,6 +51,7 @@ void display_AST_BFS(NODE* root){
   while (queue.queue_front!= -1){
     current = dequeue(&queue);
     assert (current !=NULL);
+    printf("DEBUG %d\n",current->child_count);fflush(stdout);
     if (currlvl != current->level){
       printf("\n");
       currlvl = current->level;
